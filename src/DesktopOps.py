@@ -9,12 +9,12 @@ class AutomationFunctions:
 
     @staticmethod
     def save_profile(profile_name):
-        with open(profile_name + ".txt", "w") as outfile:
+        with open(f"profiles/{profile_name}.txt", "w") as outfile:
             json.dump(AutomationFunctions.app_profiles, outfile)
 
     @staticmethod
     def load_profile(profile_name):
-        with open(profile_name + ".txt", "r") as infile:
+        with open(f"profiles/{profile_name}.txt", "r") as infile:
             AutomationFunctions.app_profiles = json.load(infile)
             for app_name, location in AutomationFunctions.app_profiles.items():
                 AutomationFunctions.open_app([app_name], [location])

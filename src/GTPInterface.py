@@ -1,3 +1,4 @@
+import os
 import openai
 import json
 
@@ -7,7 +8,24 @@ openai.api_key = "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"
 
 
 def run_conversation(prompt, gptVersion):
-    messages = [{"role": "user", "content": prompt}]
+    # Folder Path
+    path = "profiles"
+
+    # Get the list of all files in directory
+    all_files = os.listdir(path)
+
+    # Filter out the .txt files
+    existing_profiles = [file[:-4] for file in all_files if file.endswith(".txt")]
+
+    print(existing_profiles)
+
+    messages = [
+        {
+            "role": "system",
+            "content": f"This assistant is a task-execution tool designed for system automation. It is not a conversational agent. It can execute tasks such as opening applications, adjusting volume settings, saving and loading app profiles. The existing profiles that it can open are: {', '.join(existing_profiles)}.",
+        },
+        {"role": "user", "content": prompt},
+    ]
     functions = [
         {
             "name": "open_app",
@@ -67,7 +85,7 @@ def run_conversation(prompt, gptVersion):
         },
         {
             "name": "load_profile",
-            "description": "Load a saved app profile",
+            "description": "Load a saved app profile. the profile must exist and the input profile name has to match the name of the existing profile exactly",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -78,6 +96,10 @@ def run_conversation(prompt, gptVersion):
                 },
                 "required": ["profile_name"],
             },
+        },
+        {
+            "name": "invalid_command",
+            "description": "If for any way the input is entered in a unexpected way, run this function",
         },
     ]
 
