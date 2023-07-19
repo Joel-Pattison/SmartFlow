@@ -8,13 +8,13 @@ openai.api_key = "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"
 
 
 def run_conversation(prompt, gptVersion):
-    # Folder Path
+    if not os.path.exists("profiles"):
+        os.makedirs("profiles")
+
     path = "profiles"
 
-    # Get the list of all files in directory
     all_files = os.listdir(path)
 
-    # Filter out the .txt files
     existing_profiles = [file[:-4] for file in all_files if file.endswith(".txt")]
 
     print(existing_profiles)
