@@ -1,3 +1,5 @@
 .vscode
 .venv
+.idea
 profiles
+__pycache__
