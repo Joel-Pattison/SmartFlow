@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="ComboBox" name="ComboBox">
+  <widget class="ComboBox" name="model_cmb">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -23,7 +23,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="ComboBox" name="ComboBox_2">
+  <widget class="ComboBox" name="microphone_cmb">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -33,7 +33,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="CaptionLabel" name="CaptionLabel">
+  <widget class="CaptionLabel" name="model_lbl">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -46,7 +46,7 @@
     <string>Model :</string>
    </property>
   </widget>
-  <widget class="CaptionLabel" name="CaptionLabel_2">
+  <widget class="CaptionLabel" name="microphone_lbl">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -59,7 +59,7 @@
     <string>Microphone :</string>
    </property>
   </widget>
-  <widget class="LineEdit" name="LineEdit">
+  <widget class="LineEdit" name="OpenAi_key_txt">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -69,7 +69,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="LineEdit" name="LineEdit_2">
+  <widget class="LineEdit" name="toggle_voice_txt">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -79,7 +79,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="TextEdit" name="TextEdit">
+  <widget class="TextEdit" name="command_txt">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -89,7 +89,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="PushButton" name="PushButton">
+  <widget class="PushButton" name="send_command_btn">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -99,10 +99,10 @@
     </rect>
    </property>
    <property name="text">
-    <string>Push button</string>
+    <string>Send</string>
    </property>
   </widget>
-  <widget class="CaptionLabel" name="CaptionLabel_3">
+  <widget class="CaptionLabel" name="OpenAI_api_lbl">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -115,7 +115,7 @@
     <string>OpenAI API Key :</string>
    </property>
   </widget>
-  <widget class="CaptionLabel" name="CaptionLabel_4">
+  <widget class="CaptionLabel" name="hotkey_lbl">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -141,17 +141,33 @@
     <string>Text Command Input:</string>
    </property>
   </widget>
-  <widget class="RadioButton" name="RadioButton">
+  <widget class="RadioButton" name="voice_status_radio">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>250</y>
+     <y>255</y>
      <width>31</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="IndeterminateProgressRing" name="send_loading_ring">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>350</y>
+     <width>80</width>
+     <height>80</height>
+    </rect>
    </property>
   </widget>
  </widget>
@@ -174,6 +190,11 @@
   <customwidget>
    <class>CaptionLabel</class>
    <extends>QLabel</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>IndeterminateProgressRing</class>
+   <extends>QProgressBar</extends>
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>
