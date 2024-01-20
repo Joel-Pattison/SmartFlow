@@ -30,3 +30,6 @@ class MainWindow(FramelessMainWindow, Ui_Form):
     def populate_microphone_cmb(self):
         self.microphone_cmb.addItems(get_microphone_list())
 
+    def get_selected_microphone_index(self):
+        return self.microphone_cmb.currentIndex()
+
