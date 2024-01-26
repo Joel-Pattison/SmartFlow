@@ -1,4 +1,5 @@
 from GTPInterface import run_conversation
+from src.settings.settings_manager import SettingsManager
 from src.voice.voice import Voice
 from src.voice.key_listener import KeyListener
 from PyQt5 import QtWidgets
@@ -7,8 +8,10 @@ import sys
 from src.ui.controller.main_view_controller import MainWindow
 
 if __name__ == "__main__":
+    settings_manager = SettingsManager()
+
     app = QApplication(sys.argv)
-    win = MainWindow()
+    win = MainWindow(settings_manager)
     win.show()
 
     global_voice = Voice()

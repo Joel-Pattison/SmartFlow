@@ -10,18 +10,18 @@ class SettingsManager:
     save_file = "settings.save"
 
     def __init__(self):
-        if os.path.isfile("settings.txt"):
+        if os.path.isfile("settings.save"):
+            print("Settings file found: loading...")
             self.load_save()
         else:
+            print("No settings file found: creating...")
             self.update_save()
 
     def load_save(self):
-        print("Settings file found: loading...")
         with open(self.save_file, "rb") as file:
             self.settings = pickle.load(file)
 
     def update_save(self):
-        print("No settings file found: creating...")
         with open(self.save_file, "wb") as file:
             pickle.dump(self.settings, file)
 
