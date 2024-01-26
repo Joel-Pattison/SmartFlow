@@ -1,4 +1,5 @@
 import pyaudio
+from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from src.ui.view.main_view import Ui_Form
 from qframelesswindow import FramelessWindow, FramelessMainWindow, StandardTitleBar
@@ -29,6 +30,20 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.populate_microphone_cmb()
         self.load_microphone_settings()
         self.microphone_cmb.currentIndexChanged.connect(self.on_microphone_cmb_changed)
+        self.toggle_voice_txt.setReadOnly(True)
+        self.toggle_voice_txt.setText(self.settings_manager.get_voice_toggle_key())
+        self.toggle_voice_txt.installEventFilter(self)
+        self.is_entering_keybind = False
+
+    def eventFilter(self, watched, event):
+        if watched == self.toggle_voice_txt and event.type() == QEvent.FocusIn:
+            self.toggle_voice_txt.setText("enter keys...")
+            self.is_entering_keybind = True
+        elif watched == self.toggle_voice_txt and event.type() == QEvent.FocusOut:
+            self.toggle_voice_txt.setText(self.settings_manager.get_voice_toggle_key())
+            self.is_entering_keybind = False
+
+        return super().eventFilter(watched, event)
 
     def populate_microphone_cmb(self):
         self.microphone_cmb.addItems(get_microphone_list())
