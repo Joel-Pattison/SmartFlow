@@ -6,7 +6,7 @@ class SettingsManager:
     settings = {
         "mic_index": None,
         "mic_name": None,
-        "voice_toggle_key": "ctrl+r"
+        "voice_toggle_key": "r"
     }
     save_file = "settings.save"
 
