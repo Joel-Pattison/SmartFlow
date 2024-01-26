@@ -33,3 +33,6 @@ class MainWindow(FramelessMainWindow, Ui_Form):
     def get_selected_microphone_index(self):
         return self.microphone_cmb.currentIndex()
 
+    def change_ui_voice_listening_visual(self, is_listening):
+        self.voice_status_radio.setChecked(is_listening)
+

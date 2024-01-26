@@ -12,7 +12,7 @@ if __name__ == "__main__":
     win.show()
 
     global_voice = Voice()
-    key_listener = KeyListener(global_voice)
+    key_listener = KeyListener(global_voice, win)
 
     app.aboutToQuit.connect(key_listener.stop_listening)
     sys.exit(app.exec_())

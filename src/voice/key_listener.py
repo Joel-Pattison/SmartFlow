@@ -5,7 +5,8 @@ from src.voice.voice import Voice
 
 
 class KeyListener:
-    def __init__(self, voice):
+    def __init__(self, voice, win):
+        self.win = win
         self.voice_key = 'r'
         self.voice = voice
         self.listener = None
@@ -26,10 +27,12 @@ class KeyListener:
     def on_press(self, key):
         try:
             if key.char == self.voice_key and self.voice:
+                self.win.change_ui_voice_listening_visual(True)
                 self.voice.enable_recording()
         except AttributeError:
             pass
 
     def on_release(self, key):
         if key == keyboard.KeyCode.from_char(self.voice_key):
+            self.win.change_ui_voice_listening_visual(False)
             self.voice.disable_recording()
