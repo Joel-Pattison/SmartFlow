@@ -22,7 +22,7 @@ class Voice:
                 self.recording = True
                 self.record_thread = threading.Thread(target=self.start_recording)
                 self.record_thread.start()
-                print("Recording started...")
+                print("Recording started with microphone: " + self.settings_manager.get_microphone_name())
         except AttributeError:
             pass
 
