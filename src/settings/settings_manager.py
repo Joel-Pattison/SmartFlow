@@ -6,6 +6,7 @@ class SettingsManager:
     settings = {
         "mic_index": None,
         "mic_name": None,
+        "voice_toggle_key": "ctrl+r"
     }
     save_file = "settings.save"
 
@@ -38,3 +39,10 @@ class SettingsManager:
 
     def get_microphone_name(self):
         return self.settings["mic_name"]
+
+    def set_voice_toggle_key(self, key):
+        self.settings["voice_toggle_key"] = key
+        self.update_save()
+
+    def get_voice_toggle_key(self):
+        return self.settings["voice_toggle_key"]
