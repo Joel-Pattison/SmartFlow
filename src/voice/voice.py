@@ -5,9 +5,9 @@ import speech_recognition as sr
 
 
 class Voice:
-    def __init__(self):
+    def __init__(self, settings_manager):
+        self.settings_manager = settings_manager
         self.record_thread = None
-        self.mic_index = 2
         self.audio_interface = pyaudio.PyAudio()
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
@@ -35,9 +35,11 @@ class Voice:
             return False
 
     def start_recording(self):
+        mic_index = self.settings_manager.get_microphone_index()
+
         stream = self.audio_interface.open(format=self.FORMAT, channels=self.CHANNELS,
                                            rate=self.RATE, input=True, frames_per_buffer=self.CHUNK,
-                                           input_device_index=self.mic_index)
+                                           input_device_index=mic_index)
         self.frames = []
 
         while self.recording:

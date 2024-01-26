@@ -14,7 +14,7 @@ if __name__ == "__main__":
     win = MainWindow(settings_manager)
     win.show()
 
-    global_voice = Voice()
+    global_voice = Voice(settings_manager)
     key_listener = KeyListener(global_voice, win)
 
     app.aboutToQuit.connect(key_listener.stop_listening)
