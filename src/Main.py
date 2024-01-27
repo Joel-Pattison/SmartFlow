@@ -4,7 +4,7 @@ from src.voice.key_listener import KeyListener
 from PyQt5.QtWidgets import QApplication
 import sys
 from src.ui.controller.main_view_controller import MainWindow
-from src.llm.conversation import llm_conversation
+from src.llm.conversation import LLMConversation
 
 if __name__ == "__main__":
     settings_manager = SettingsManager()
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     win = MainWindow(settings_manager)
     win.show()
 
-    llm_conversation = llm_conversation(settings_manager)
+    llm_conversation = LLMConversation(settings_manager)
     global_voice = Voice(settings_manager)
     key_listener = KeyListener(global_voice, win, settings_manager)
 

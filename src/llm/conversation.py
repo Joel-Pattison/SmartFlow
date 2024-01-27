@@ -4,13 +4,15 @@ import json
 
 from src.DesktopOps import AutomationFunctions
 
-openai.api_key = "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"
 
-class llm_conversation:
+class LLMConversation:
     def __init__(self, settings_manager):
         self.settings_manager = settings_manager
 
     def run_conversation(self, prompt):
+        if openai.api_key != self.settings_manager.get_openai_api_key():
+            openai.api_key = self.settings_manager.get_openai_api_key()
+
         if not os.path.exists("profiles"):
             os.makedirs("profiles")
 
