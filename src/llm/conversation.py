@@ -2,7 +2,7 @@ import os
 import openai
 import json
 
-from src.DesktopOps import AutomationFunctions
+from src.tools.windows.windows_api import AutomationFunctions
 
 
 class LLMConversation:
@@ -118,7 +118,7 @@ class LLMConversation:
             },
         ]
 
-        model = "gpt-4-0125-preview"
+        model = "gpt-3.5-turbo-1106"
 
         response = self.client.chat.completions.create(
             model=model,
