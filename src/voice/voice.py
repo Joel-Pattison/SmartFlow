@@ -5,7 +5,8 @@ import speech_recognition as sr
 
 
 class Voice:
-    def __init__(self, settings_manager):
+    def __init__(self, settings_manager, llm_conversation):
+        self.llm_conversation = llm_conversation
         self.settings_manager = settings_manager
         self.record_thread = None
         self.audio_interface = pyaudio.PyAudio()
@@ -55,6 +56,7 @@ class Voice:
         try:
             text = recognizer.recognize_google(audio_data)
             print(f"Text: {text}")
+            self.llm_conversation.run_conversation(text)
         except sr.UnknownValueError:
             print("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:

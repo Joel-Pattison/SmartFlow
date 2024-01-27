@@ -14,7 +14,7 @@ if __name__ == "__main__":
     win.show()
 
     llm_conversation = LLMConversation(settings_manager)
-    global_voice = Voice(settings_manager)
+    global_voice = Voice(settings_manager, llm_conversation)
     key_listener = KeyListener(global_voice, win, settings_manager)
 
     app.aboutToQuit.connect(key_listener.stop_listening)
