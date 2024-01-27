@@ -29,7 +29,6 @@ class KeyListener:
 
     def on_press(self, key):
         self.currently_pressed_keys.add(key)
-        # print(self.currently_pressed_keys)
         if self.win.is_entering_keybind:
             self.update_entering_keybind_display()
         elif self.check_recording_keys() and not self.is_recording:
@@ -37,8 +36,6 @@ class KeyListener:
 
     def on_release(self, key):
         self.currently_pressed_keys.discard(key)
-        print("Released key: ", str(key), "remaining keys: " + str(self.currently_pressed_keys))
-        # print(self.currently_pressed_keys)
         if self.win.is_entering_keybind and len(self.currently_pressed_keys) == 0:
             self.set_new_keybind()
         elif self.is_recording and not self.check_recording_keys():
