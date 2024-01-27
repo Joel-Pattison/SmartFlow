@@ -8,10 +8,11 @@ from src.DesktopOps import AutomationFunctions
 class LLMConversation:
     def __init__(self, settings_manager):
         self.settings_manager = settings_manager
+        self.client = openai.OpenAI(api_key="NONE")
 
     def run_conversation(self, prompt):
-        if openai.api_key != self.settings_manager.get_openai_api_key():
-            openai.api_key = self.settings_manager.get_openai_api_key()
+        if self.client.api_key != self.settings_manager.get_openai_api_key():
+            self.client.api_key = self.settings_manager.get_openai_api_key()
 
         if not os.path.exists("profiles"):
             os.makedirs("profiles")
@@ -31,103 +32,114 @@ class LLMConversation:
             },
             {"role": "user", "content": prompt},
         ]
-        functions = [
+        tools = [
             {
-                "name": "open_app",
-                "description": "Open the specified app, or multiple specified apps",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "app_names": {
-                            "type": "array",
-                            "description": "The name of the app to run e.g. firefox. can be up to two different apps to run at the same time",
-                            "items": {"type": "string"},
+                "type": "function",
+                "function": {
+                    "name": "open_app",
+                    "description": "Open the specified app, or multiple specified apps",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "app_names": {
+                                "type": "array",
+                                "description": "The name of the app to run e.g. firefox. can be up to two different apps to run at the same time",
+                                "items": {"type": "string"}
+                            },
+                            "locations": {
+                                "type": "array",
+                                "description": "The location to move each of the apps once they're open",
+                                "enum": ["left", "right", "top left", "bottom left", "top right", "bottom right"],
+                                "items": {"type": "string"}
+                            }
                         },
-                        "locations": {
-                            "type": "array",
-                            "description": "The location to move each of the apps once they're open",
-                            "enum": [
-                                "left",
-                                "right",
-                                "top left",
-                                "bottom left",
-                                "top right",
-                                "bottom right",
-                            ],
-                            "items": {"type": "string"},
-                        },
-                    },
-                    "required": ["app_names"],
-                },
+                        "required": ["app_names"]
+                    }
+                }
             },
             {
-                "name": "change_volume",
-                "description": "Change the volume level",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "volume_level": {
-                            "type": "number",
-                            "description": "The volume level to set, from 0 to 100",
+                "type": "function",
+                "function": {
+                    "name": "change_volume",
+                    "description": "Change the volume level",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "volume_level": {
+                                "type": "number",
+                                "description": "The volume level to set, from 0 to 100"
+                            }
                         },
-                    },
-                    "required": ["volume_level"],
-                },
+                        "required": ["volume_level"]
+                    }
+                }
             },
             {
-                "name": "save_profile",
-                "description": "Save the current app profiles",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "profile_name": {
-                            "type": "string",
-                            "description": "The name of the profile to save",
+                "type": "function",
+                "function": {
+                    "name": "save_profile",
+                    "description": "Save the current app profiles",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "profile_name": {
+                                "type": "string",
+                                "description": "The name of the profile to save"
+                            }
                         },
-                    },
-                    "required": ["profile_name"],
-                },
+                        "required": ["profile_name"]
+                    }
+                }
             },
             {
-                "name": "load_profile",
-                "description": "Load a saved app profile. the profile must exist and the input profile name has to match the name of the existing profile exactly",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "profile_name": {
-                            "type": "string",
-                            "description": "The name of the profile to load",
+                "type": "function",
+                "function": {
+                    "name": "load_profile",
+                    "description": "Load a saved app profile. the profile must exist and the input profile name has to match the name of the existing profile exactly",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "profile_name": {
+                                "type": "string",
+                                "description": "The name of the profile to load"
+                            }
                         },
-                    },
-                    "required": ["profile_name"],
-                },
+                        "required": ["profile_name"]
+                    }
+                }
             },
             {
-                "name": "invalid_command",
-                "description": "If for any way the input is entered in a unexpected way, run this function",
+                "type": "function",
+                "function": {
+                    "name": "invalid_command",
+                    "description": "If for any way the input is entered in a unexpected way, run this function"
+                }
             },
         ]
 
-        model = "gpt-4-0613" if gptVersion == "4" else "gpt-3.5-turbo-0613"
+        model = "gpt-4-0125-preview"
 
-        response = openai.ChatCompletion.create(
+        response = self.client.chat.completions.create(
             model=model,
             messages=messages,
-            functions=functions,
-            function_call="auto",
+            tools=tools,
+            tool_choice="auto",
         )
 
-        response_message = response["choices"][0]["message"]
+        response_message = response.choices[0].message
         print(response_message)
 
-        if response_message.get("function_call"):
+        tool_calls = response_message.tool_calls
+
+        if tool_calls:
             available_functions = {
                 "open_app": AutomationFunctions.open_app,
                 "change_volume": AutomationFunctions.change_volume,
                 "save_profile": AutomationFunctions.save_profile,
                 "load_profile": AutomationFunctions.load_profile,
             }
-            function_name = response_message["function_call"]["name"]
-            function_to_call = available_functions[function_name]
-            function_args = json.loads(response_message["function_call"]["arguments"])
-            function_response = function_to_call(**function_args)
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_to_call = available_functions[function_name]
+                function_args = json.loads(tool_call.function.arguments)
+                function_response = function_to_call(**function_args)
