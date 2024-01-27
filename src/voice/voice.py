@@ -29,9 +29,7 @@ class Voice:
     def disable_recording(self):
         if self.recording:
             self.recording = False
-            self.record_thread.join()
             print("Recording stopped, processing...")
-            self.process_audio()
             return False
 
     def start_recording(self):
@@ -45,6 +43,8 @@ class Voice:
         while self.recording:
             data = stream.read(self.CHUNK, exception_on_overflow=False)
             self.frames.append(data)
+
+        self.process_audio()
 
         stream.stop_stream()
         stream.close()

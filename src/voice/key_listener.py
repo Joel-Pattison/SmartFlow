@@ -13,8 +13,7 @@ class KeyListener:
         self.listener = None
         self.listener_thread = threading.Thread(target=self.start_listening)
         self.listener_thread.start()
-        self.currently_pressed_keys = []
-        self.current_key_sequence = []
+        self.currently_pressed_keys = set()
         self.is_recording = False
 
     def start_listening(self):
@@ -29,30 +28,47 @@ class KeyListener:
         self.listener_thread.join()
 
     def on_press(self, key):
-        if key not in self.currently_pressed_keys:
-            self.currently_pressed_keys.append(key)
-            self.current_key_sequence.append(key)
-            if self.win.is_entering_keybind:
-                self.win.toggle_voice_txt.setText(" + ".join([str(x) for x in self.current_key_sequence]))
-                return
-
-        current_key_sequence_str = ' + '.join([str(k) for k in self.current_key_sequence])
-        if current_key_sequence_str == self.settings_manager.get_voice_toggle_key() and not self.is_recording:
-            self.is_recording = True
-            self.win.change_ui_voice_listening_visual(True)
-            self.voice.enable_recording()
-            return
+        self.currently_pressed_keys.add(key)
+        # print(self.currently_pressed_keys)
+        if self.win.is_entering_keybind:
+            self.update_entering_keybind_display()
+        elif self.check_recording_keys() and not self.is_recording:
+            self.start_recording()
 
     def on_release(self, key):
-        self.currently_pressed_keys.remove(key)
-        if len(self.currently_pressed_keys) == 0:
-            self.settings_manager.set_voice_toggle_key(self.win.toggle_voice_txt.text())
-            self.current_key_sequence = []
-            if self.win.is_entering_keybind:
-                self.win.toggle_voice_txt.setText("Keybind set to: " + self.settings_manager.get_voice_toggle_key())
-                return
+        self.currently_pressed_keys.discard(key)
+        print("Released key: ", str(key), "remaining keys: " + str(self.currently_pressed_keys))
+        # print(self.currently_pressed_keys)
+        if self.win.is_entering_keybind and len(self.currently_pressed_keys) == 0:
+            self.set_new_keybind()
+        elif self.is_recording and not self.check_recording_keys():
+            self.stop_recording()
 
-        if self.is_recording:
-            self.is_recording = False
-            self.win.change_ui_voice_listening_visual(False)
-            self.voice.disable_recording()
+    def check_recording_keys(self):
+        required_keys_str = self.settings_manager.get_voice_toggle_key()
+        required_keys = {k for k in required_keys_str.split(' + ')}
+
+        normalized_required_keys = set(map(str, required_keys))
+        normalized_current_keys = set(map(str, self.currently_pressed_keys))
+
+        return normalized_required_keys.issubset(normalized_current_keys)
+
+    def start_recording(self):
+        self.is_recording = True
+        self.win.change_ui_voice_listening_visual(True)
+        self.voice.enable_recording()
+
+    def stop_recording(self):
+        self.win.change_ui_voice_listening_visual(False)
+        self.voice.disable_recording()
+        self.is_recording = False
+        self.voice.disable_recording()
+
+    def update_entering_keybind_display(self):
+        keybind_str = " + ".join([str(k) for k in self.currently_pressed_keys])
+        self.win.toggle_voice_txt.setText(keybind_str)
+
+    def set_new_keybind(self):
+        new_keybind = self.win.toggle_voice_txt.text()
+        self.settings_manager.set_voice_toggle_key(new_keybind)
+        self.win.toggle_voice_txt.setText("Keybind set to: " + new_keybind)
