@@ -6,7 +6,9 @@ class SettingsManager:
     settings = {
         "mic_index": None,
         "mic_name": None,
-        "voice_toggle_key": "r"
+        "voice_toggle_key": "r",
+        "selected_model": None,
+        "openai_api_key": None
     }
     save_file = "settings.save"
 
