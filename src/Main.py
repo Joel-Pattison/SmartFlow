@@ -8,12 +8,12 @@ from src.llm.conversation import LLMConversation
 
 if __name__ == "__main__":
     settings_manager = SettingsManager()
+    llm_conversation = LLMConversation(settings_manager)
 
     app = QApplication(sys.argv)
-    win = MainWindow(settings_manager)
+    win = MainWindow(settings_manager, llm_conversation)
     win.show()
 
-    llm_conversation = LLMConversation(settings_manager)
     global_voice = Voice(settings_manager, llm_conversation)
     key_listener = KeyListener(global_voice, win, settings_manager)
 

@@ -22,11 +22,13 @@ def get_microphone_list():
 
 
 class MainWindow(FramelessMainWindow, Ui_Form):
-    def __init__(self, settings_manager):
+    def __init__(self, settings_manager, llm_conversation):
         super().__init__()
+        self.llm_conversation = llm_conversation
         self.settings_manager = settings_manager
         self.setupUi(self)
         self.send_loading_ring.hide()
+        self.is_entering_keybind = False
 
         self.populate_microphone_cmb()
         self.load_microphone_settings()
@@ -39,7 +41,7 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.load_openai_api_key()
         self.OpenAi_key_txt.textChanged.connect(self.on_openai_key_txt_changed)
 
-        self.is_entering_keybind = False
+        self.send_command_btn.clicked.connect(self.on_send_command_btn_clicked)
 
     def eventFilter(self, watched, event):
         if watched == self.toggle_voice_txt and event.type() == QEvent.FocusIn:
@@ -68,6 +70,13 @@ class MainWindow(FramelessMainWindow, Ui_Form):
 
     def on_openai_key_txt_changed(self, text):
         self.settings_manager.set_openai_api_key(text)
+
+    def on_send_command_btn_clicked(self):
+        if self.command_txt.toPlainText() == "":
+            return
+        prompt = self.command_txt.toPlainText()
+        self.command_txt.setText("")
+        self.llm_conversation.run_conversation(prompt)
 
     def load_microphone_settings(self):
         if self.settings_manager.get_microphone_name() is None:

@@ -11,6 +11,7 @@ class LLMConversation:
         self.client = openai.OpenAI(api_key="NONE")
 
     def run_conversation(self, prompt):
+        print("Running conversation...")
         if self.client.api_key != self.settings_manager.get_openai_api_key():
             self.client.api_key = self.settings_manager.get_openai_api_key()
 
