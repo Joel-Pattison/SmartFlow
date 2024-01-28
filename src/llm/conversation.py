@@ -44,12 +44,12 @@ class LLMConversation:
                         "properties": {
                             "app_names": {
                                 "type": "array",
-                                "description": "The name of the app to run e.g. firefox. can be up to two different apps to run at the same time",
+                                "description": "The name of the app to run e.g. firefox. can run multiple apps at the same time",
                                 "items": {"type": "string"}
                             },
                             "locations": {
                                 "type": "array",
-                                "description": "The location to move each of the apps once they're open",
+                                "description": "The locations to move each of the apps once they're open to be stored in an array of enum values",
                                 "enum": ["left", "right", "top left", "bottom left", "top right", "bottom right"],
                                 "items": {"type": "string"}
                             }

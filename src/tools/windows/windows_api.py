@@ -6,6 +6,9 @@ import os
 import pyautogui
 import ctypes
 from pygetwindow import getWindowsWithTitle
+from ctypes import POINTER, cast
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 
 class AutomationFunctions:
@@ -27,6 +30,7 @@ class AutomationFunctions:
 
     @staticmethod
     def open_app(app_names, locations="NULL"):
+        print(app_names, locations)
         if locations is None:
             locations = ["NULL"] * len(app_names)
 
@@ -38,7 +42,22 @@ class AutomationFunctions:
 
     @staticmethod
     def change_volume(volume_level):
-        ctypes.windll.winmm.waveOutSetVolume(0, volume_level * 65535 // 100)
+        # Convert the volume from percentage to a float between 0.0 and 1.0
+        volume_level = volume_level / 100.0
+
+        # Get the default audio device using AudioUtilities
+        devices = AudioUtilities.GetSpeakers()
+
+        # Get the interface to the volume control
+        interface = devices.Activate(
+            IAudioEndpointVolume._iid_,
+            CLSCTX_ALL,
+            None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+
+        # Set the master volume to the desired level
+        volume.SetMasterVolumeLevelScalar(volume_level, None)
+        print(f"System volume set to {volume_level}%")
 
 
 def find_and_run_app(app_name):
@@ -60,11 +79,13 @@ def find_and_run_app(app_name):
 
 
 def set_app_location(app_name, location):
+    time.sleep(0.5)
     window = None
     for win in getWindowsWithTitle(app_name):
-        if win.isVisible:
-            window = win
-            break
+        window = win
+        break
+
+    print(getWindowsWithTitle(app_name), "to location:", location)
 
     if window is None:
         print(f"No visible window found for: {app_name}")
@@ -72,7 +93,7 @@ def set_app_location(app_name, location):
 
     screen_width, screen_height = pyautogui.size()
 
-    if location == "left":
+    if location == "left" or location == "l":
         window.moveTo(0, 0)
         window.resizeTo(screen_width // 2, screen_height)
     elif location == "right":
