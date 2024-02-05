@@ -48,3 +48,10 @@ class SettingsManager:
 
     def get_voice_toggle_key(self):
         return self.settings["voice_toggle_key"]
+
+    def set_openai_api_key(self, key):
+        self.settings["openai_api_key"] = key
+        self.update_save()
+
+    def get_openai_api_key(self):
+        return self.settings["openai_api_key"]
