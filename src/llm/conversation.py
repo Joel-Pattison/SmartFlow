@@ -113,7 +113,7 @@ class LLMConversation:
                 "type": "function",
                 "function": {
                     "name": "invalid_command",
-                    "description": "If for any way the input is entered in a unexpected way, run this function"
+                    "description": "Run this function if you cannot assist the user with the given command or input for any reason",
                 }
             },
         ]
