@@ -8,7 +8,8 @@ class SettingsManager:
         "mic_name": None,
         "voice_toggle_key": "r",
         "selected_model": None,
-        "openai_api_key": None
+        "openai_api_key": None,
+        "voice_model": None,
     }
     save_file = "settings.save"
 
