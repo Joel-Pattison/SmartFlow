@@ -1,6 +1,6 @@
 from src.settings.settings_manager import SettingsManager
 from src.voice.voice import Voice
-from src.voice.key_listener import KeyListener
+from src.ui.controller.key_listener import KeyListener
 from PyQt5.QtWidgets import QApplication
 import sys
 from src.ui.controller.main_view_controller import MainWindow
