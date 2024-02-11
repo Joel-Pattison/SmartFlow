@@ -8,7 +8,8 @@ class SettingsManager:
         "mic_name": None,
         "voice_toggle_key": "r",
         "selected_model": None,
-        "openai_api_key": None
+        "openai_api_key": None,
+        "voice_model": None,
     }
     save_file = "settings.save"
 
@@ -55,3 +56,10 @@ class SettingsManager:
 
     def get_openai_api_key(self):
         return self.settings["openai_api_key"]
+
+    def set_voice_model(self, model):
+        self.settings["voice_model"] = model
+        self.update_save()
+
+    def get_voice_model(self):
+        return self.settings["voice_model"]

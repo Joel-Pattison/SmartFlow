@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>396</width>
-    <height>527</height>
+    <height>616</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>110</y>
+     <y>190</y>
      <width>351</width>
      <height>32</height>
     </rect>
@@ -38,19 +38,19 @@
     <rect>
      <x>20</x>
      <y>30</y>
-     <width>81</width>
+     <width>141</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Model :</string>
+    <string>Large Language Model :</string>
    </property>
   </widget>
   <widget class="CaptionLabel" name="microphone_lbl">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>90</y>
+     <y>170</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -63,7 +63,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>180</y>
+     <y>260</y>
      <width>351</width>
      <height>33</height>
     </rect>
@@ -73,7 +73,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>250</y>
+     <y>330</y>
      <width>311</width>
      <height>33</height>
     </rect>
@@ -83,7 +83,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>320</y>
+     <y>400</y>
      <width>351</width>
      <height>151</height>
     </rect>
@@ -93,7 +93,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>480</y>
+     <y>560</y>
      <width>351</width>
      <height>32</height>
     </rect>
@@ -106,7 +106,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>160</y>
+     <y>240</y>
      <width>131</width>
      <height>16</height>
     </rect>
@@ -119,7 +119,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>230</y>
+     <y>310</y>
      <width>141</width>
      <height>16</height>
     </rect>
@@ -132,7 +132,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>300</y>
+     <y>380</y>
      <width>121</width>
      <height>16</height>
     </rect>
@@ -148,8 +148,8 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>255</y>
-     <width>31</width>
+     <y>335</y>
+     <width>32</width>
      <height>24</height>
     </rect>
    </property>
@@ -466,10 +466,33 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>150</x>
-     <y>350</y>
+     <y>430</y>
      <width>80</width>
      <height>80</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="ComboBox" name="voice_cmb">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>351</width>
+     <height>32</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="CaptionLabel" name="voice_lbl">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>100</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Voice Model :</string>
    </property>
   </widget>
  </widget>
