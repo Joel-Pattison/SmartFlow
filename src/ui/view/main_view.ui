@@ -472,6 +472,16 @@ PillToolButton:disabled:checked {
     </rect>
    </property>
   </widget>
+  <widget class="ComboBox" name="voice_cmb">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>351</width>
+     <height>32</height>
+    </rect>
+   </property>
+  </widget>
   <widget class="CaptionLabel" name="voice_lbl">
    <property name="geometry">
     <rect>
@@ -483,16 +493,6 @@ PillToolButton:disabled:checked {
    </property>
    <property name="text">
     <string>Voice Model :</string>
-   </property>
-  </widget>
-  <widget class="ComboBox" name="voice_cmb">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>120</y>
-     <width>351</width>
-     <height>32</height>
-    </rect>
    </property>
   </widget>
  </widget>
