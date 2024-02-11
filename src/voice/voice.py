@@ -2,10 +2,12 @@ import pyaudio
 import threading
 from pynput import keyboard
 import speech_recognition as sr
+import time
 
 
 class Voice:
-    def __init__(self, settings_manager, llm_conversation):
+    def __init__(self, settings_manager, llm_conversation, voice_models):
+        self.voice_models = voice_models
         self.llm_conversation = llm_conversation
         self.settings_manager = settings_manager
         self.record_thread = None
@@ -51,13 +53,9 @@ class Voice:
         stream.close()
 
     def process_audio(self):
-        recognizer = sr.Recognizer()
-        audio_data = sr.AudioData(b''.join(self.frames), self.RATE, 2)
-        try:
-            text = recognizer.recognize_google(audio_data)
-            print(f"Text: {text}")
-            self.llm_conversation.run_conversation(text)
-        except sr.UnknownValueError:
-            print("Google Speech Recognition could not understand audio")
-        except sr.RequestError as e:
-            print(f"Could not request results from Google Speech Recognition service; {e}")
+        start_time = time.time()
+        text = self.voice_models[self.settings_manager.get_voice_model()].recognize(self.frames)
+        end_time = time.time()
+        print(f"Completed recognition, Time to process audio: {end_time - start_time}")
+        print(f"Text: {text}")
+        self.llm_conversation.run_conversation(text)
