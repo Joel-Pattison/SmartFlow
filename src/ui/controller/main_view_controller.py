@@ -22,13 +22,18 @@ def get_microphone_list():
 
 
 class MainWindow(FramelessMainWindow, Ui_Form):
-    def __init__(self, settings_manager, llm_conversation):
+    def __init__(self, settings_manager, llm_conversation, voice_models):
         super().__init__()
         self.llm_conversation = llm_conversation
         self.settings_manager = settings_manager
+        self.voice_models = voice_models
         self.setupUi(self)
         self.send_loading_ring.hide()
         self.is_entering_keybind = False
+
+        self.populate_voice_model_cmb()
+        self.load_voice_model_settings()
+        self.voice_cmb.currentIndexChanged.connect(self.on_voice_cmb_changed)
 
         self.populate_microphone_cmb()
         self.load_microphone_settings()
@@ -52,6 +57,32 @@ class MainWindow(FramelessMainWindow, Ui_Form):
             self.is_entering_keybind = False
 
         return super().eventFilter(watched, event)
+
+    def populate_voice_model_cmb(self):
+        self.voice_cmb.addItems(self.voice_models.keys())
+
+    def load_voice_model_settings(self):
+        if self.settings_manager.get_voice_model() is None:
+            print("No voice model found in settings")
+            self.settings_manager.set_voice_model(self.voice_cmb.currentText())
+            self.voice_models[self.voice_cmb.currentText()].load_model()
+            return
+        voice_model = self.settings_manager.get_voice_model()
+        self.voice_models[self.settings_manager.get_voice_model()].load_model()
+        voice_model_index = self.voice_cmb.findText(voice_model)
+        if voice_model_index != -1:
+            print("Voice model found in list: " + voice_model)
+            self.voice_cmb.setCurrentIndex(voice_model_index)
+        else:
+            print("Voice model not found in list: " + voice_model)
+            self.settings_manager.set_voice_model(self.voice_cmb.currentText())
+
+    def on_voice_cmb_changed(self):
+        print("Voice model changed: " + self.voice_cmb.currentText())
+        # unload old model
+        self.voice_models[self.settings_manager.get_voice_model()].unload_model()
+        self.settings_manager.set_voice_model(self.voice_cmb.currentText())
+        self.voice_models[self.voice_cmb.currentText()].load_model()
 
     def populate_microphone_cmb(self):
         self.microphone_cmb.addItems(get_microphone_list())
