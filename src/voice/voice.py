@@ -38,6 +38,8 @@ class Voice:
     def start_recording(self):
         mic_index = self.settings_manager.get_microphone_index()
 
+        self.RATE = self.voice_models[self.settings_manager.get_voice_model()].get_sample_rate()
+
         stream = self.audio_interface.open(format=self.FORMAT, channels=self.CHANNELS,
                                            rate=self.RATE, input=True, frames_per_buffer=self.CHUNK,
                                            input_device_index=mic_index)

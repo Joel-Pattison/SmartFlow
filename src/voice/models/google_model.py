@@ -4,6 +4,7 @@ import speech_recognition as sr
 class Google:
     def __init__(self):
         self.recognizer = sr.Recognizer()
+        self.sample_rate = 44100
 
     def recognize(self, audio_frames):
         try:
@@ -22,3 +23,6 @@ class Google:
 
     def unload_model(self):
         pass
+
+    def get_sample_rate(self):
+        return self.sample_rate
