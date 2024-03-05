@@ -1,6 +1,7 @@
 import time
 import json
 import subprocess
+import winreg
 from enum import Enum
 from typing import List, Optional
 
@@ -150,22 +151,53 @@ def set_brightness(level):
 
 def shutdown_computer():
     c = wmi.WMI()
-    for os in c.Win32_OperatingSystem():
+    for thisOS in c.Win32_OperatingSystem():
         # The flag 0 + 2 = 2 means "Shutdown"
-        os.Win32Shutdown(2)
+        thisOS.Win32Shutdown(2)
         print("Shutting down the computer gracefully...")
 
 
 def restart_computer():
     c = wmi.WMI()
-    for os in c.Win32_OperatingSystem():
+    for thisOS in c.Win32_OperatingSystem():
         # The flag 0 + 4 = 4 means "Restart"
-        os.Win32Shutdown(4)
+        thisOS.Win32Shutdown(4)
         print("Restarting the computer gracefully...")
 
 
 def put_computer_to_sleep_gracefully():
     c = wmi.WMI()
-    for os in c.Win32_OperatingSystem():
-        os.Win32Shutdown(1)
+    for thisOS in c.Win32_OperatingSystem():
+        thisOS.Win32Shutdown(1)
         print("Putting the computer to sleep gracefully...")
+
+def toggle_theme_mode(dark_mode=True):
+    # Define registry path and value name
+    reg_path = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    value_name_ui = "AppsUseLightTheme"
+    value_name_system = "SystemUsesLightTheme"
+
+    # Define the value: 0 for Dark mode, 1 for Light mode
+    value_data = 0 if dark_mode else 1
+
+    try:
+        # Open the registry key
+        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as hkey:
+            with winreg.OpenKey(hkey, reg_path, 0, winreg.KEY_WRITE) as reg_key:
+                # Set the value for both UI and system
+                winreg.SetValueEx(reg_key, value_name_ui, 0, winreg.REG_DWORD, value_data)
+                winreg.SetValueEx(reg_key, value_name_system, 0, winreg.REG_DWORD, value_data)
+                print(f"Theme set to {'Dark' if dark_mode else 'Light'} mode.")
+
+                try:
+                    c = wmi.WMI()
+                    for process in c.Win32_Process(name="explorer.exe"):
+                        process.Terminate()  # Terminate existing explorer.exe process
+
+                    # Start a new instance of explorer.exe
+                    c.Win32_Process.Create(CommandLine="explorer.exe")
+                    print("Explorer.exe restarted successfully.")
+                except Exception as e:
+                    print(f"Failed to restart explorer.exe: {e}")
+    except Exception as e:
+        print(f"Failed to change theme mode: {e}")
