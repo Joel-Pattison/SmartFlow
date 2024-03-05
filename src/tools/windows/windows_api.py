@@ -91,11 +91,18 @@ def find_and_run_app(app_name):
 
 
 def set_app_location(app_name, location):
-    time.sleep(0.5)
+    # location is a enum not a string so must be converted to string
+    location = location.value
     window = None
-    for win in getWindowsWithTitle(app_name):
-        window = win
-        break
+    loops = 0
+
+    while window is None and loops < 4:  # Check the condition here to limit attempts
+        for win in getWindowsWithTitle(app_name):
+            window = win
+        if window is None:
+            loops += 1
+            print("Waiting for window to appear")
+            time.sleep(0.5)
 
     print(getWindowsWithTitle(app_name), "to location:", location)
 
