@@ -12,6 +12,7 @@ from pygetwindow import getWindowsWithTitle
 from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import wmi
 
 
 class OpenAppEnum(str, Enum):
@@ -21,6 +22,7 @@ class OpenAppEnum(str, Enum):
     bottom_left = 'bottom left'
     top_right = 'top right'
     bottom_right = 'bottom right'
+    invalid = 'invalid'
 
 
 class AutomationFunctions:
@@ -130,3 +132,17 @@ def set_app_location(app_name, location):
     elif location == "bottom right":
         window.moveTo(screen_width // 2, screen_height // 2)
         window.resizeTo(screen_width // 2, screen_height // 2)
+
+
+def set_brightness(level):
+    # Initialize the WMI interface
+    wmi_interface = wmi.WMI(namespace='wmi')
+
+    # Get the 'WmiMonitorBrightnessMethods' class to access the brightness methods
+    methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
+
+    # Set the brightness level
+    # The first parameter (Timeout) is set to 0, as it's not used in this context
+    methods.WmiSetBrightness(Brightness=level, Timeout=0)
+
+    print(f"Brightness set to {level}%.")
