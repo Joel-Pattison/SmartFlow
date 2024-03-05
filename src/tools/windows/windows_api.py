@@ -146,3 +146,26 @@ def set_brightness(level):
     methods.WmiSetBrightness(Brightness=level, Timeout=0)
 
     print(f"Brightness set to {level}%.")
+
+
+def shutdown_computer():
+    c = wmi.WMI()
+    for os in c.Win32_OperatingSystem():
+        # The flag 0 + 2 = 2 means "Shutdown"
+        os.Win32Shutdown(2)
+        print("Shutting down the computer gracefully...")
+
+
+def restart_computer():
+    c = wmi.WMI()
+    for os in c.Win32_OperatingSystem():
+        # The flag 0 + 4 = 4 means "Restart"
+        os.Win32Shutdown(4)
+        print("Restarting the computer gracefully...")
+
+
+def put_computer_to_sleep_gracefully():
+    c = wmi.WMI()
+    for os in c.Win32_OperatingSystem():
+        os.Win32Shutdown(1)
+        print("Putting the computer to sleep gracefully...")
