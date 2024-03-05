@@ -1,6 +1,9 @@
 import time
 import json
 import subprocess
+from enum import Enum
+from typing import List, Optional
+
 from screeninfo import get_monitors
 import os
 import pyautogui
@@ -9,6 +12,15 @@ from pygetwindow import getWindowsWithTitle
 from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+
+class OpenAppEnum(str, Enum):
+    left = 'left'
+    right = 'right'
+    top_left = 'top left'
+    bottom_left = 'bottom left'
+    top_right = 'top right'
+    bottom_right = 'bottom right'
 
 
 class AutomationFunctions:
@@ -29,7 +41,7 @@ class AutomationFunctions:
                 AutomationFunctions.open_app([app_name], [location])
 
     @staticmethod
-    def open_app(app_names, locations="NULL"):
+    def open_app(app_names: List[str], locations: Optional[List[OpenAppEnum]] = None):
         print(app_names, locations)
         if locations is None:
             locations = ["NULL"] * len(app_names)
