@@ -13,6 +13,7 @@ from pygetwindow import getWindowsWithTitle
 from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
 import wmi
 
 
@@ -165,7 +166,7 @@ def restart_computer():
         print("Restarting the computer gracefully...")
 
 
-def put_computer_to_sleep_gracefully():
+def put_computer_to_sleep():
     c = wmi.WMI()
     for thisOS in c.Win32_OperatingSystem():
         thisOS.Win32Shutdown(1)
@@ -272,3 +273,10 @@ def toggle_night_light():
         print("Night Light toggled successfully.")
     else:
         print("Failed to toggle Night Light.")
+
+async def bluetooth_power(turn_on):
+    all_radios = await Radio.get_radios_async()
+    for this_radio in all_radios:
+        if this_radio.kind == RadioKind.BLUETOOTH:
+            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
+            print(f"Bluetooth turned {'on' if turn_on else 'off'}.")
