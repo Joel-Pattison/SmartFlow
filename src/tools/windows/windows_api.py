@@ -274,9 +274,18 @@ def toggle_night_light():
     else:
         print("Failed to toggle Night Light.")
 
+
 async def bluetooth_power(turn_on):
     all_radios = await Radio.get_radios_async()
     for this_radio in all_radios:
         if this_radio.kind == RadioKind.BLUETOOTH:
             await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
             print(f"Bluetooth turned {'on' if turn_on else 'off'}.")
+
+
+async def toggle_wifi(turn_on):
+    all_radios = await Radio.get_radios_async()
+    for this_radio in all_radios:
+        if this_radio.kind == RadioKind.WI_FI:  # Check if the radio is WiFi
+            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
+            print(f"WiFi turned {'on' if turn_on else 'off'}.")
