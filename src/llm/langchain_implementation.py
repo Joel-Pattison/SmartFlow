@@ -34,7 +34,16 @@ class LangchainConversation:
             ]
         )
 
-        tools = [langchain_tools.open_app_tool]
+        # tools = [langchain_tools.open_app_tool]
+
+        # create the tools by looping through the LangchainTools class
+        tools = []
+        for attribute_name in dir(langchain_tools):
+            attribute = getattr(langchain_tools, attribute_name)
+            if isinstance(attribute, StructuredTool):
+                tools.append(attribute)
+
+        print(tools)
 
         llm_with_tools = llm.bind_tools(tools)
 
