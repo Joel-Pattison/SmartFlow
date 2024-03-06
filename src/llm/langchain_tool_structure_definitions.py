@@ -24,6 +24,13 @@ class ChangeVolumeInput(BaseModel):
     volume_level: int = Field(description="The desired volume level as a percentage. E.g. 50 for 50% volume.")
 
 
+class WindowsSettingsInteractionInput(BaseModel):
+    interaction: str = Field(description="The interaction to perform with the Windows settings. "
+                                         "Valid interactions: shutdown, restart, sleep, dark_mode, light_mode, "
+                                         "night_light_on, night_light_off, bluetooth_on, bluetooth_off, "
+                                         "wifi_on, wifi_off.")
+
+
 class LangchainTools:
     def __init__(self):
         self.open_app_tool = StructuredTool.from_function(
@@ -39,4 +46,12 @@ class LangchainTools:
             name="ChangeVolume",
             description="Change the system volume to the specified level.",
             args_schema=ChangeVolumeInput
+        )
+
+        self.windows_settings_interaction_tool = StructuredTool.from_function(
+            func=AutomationFunctions.windows_settings_interaction,
+            name="WindowsSettingsInteraction",
+            description="Interact with various Windows settings, such as shutdown, restart, sleep, "
+                        "dark mode, light mode, night light, Bluetooth, and Wi-Fi.",
+            args_schema=WindowsSettingsInteractionInput
         )
