@@ -20,6 +20,10 @@ class OpenAppInput(BaseModel):
                                                                "the app name.")
 
 
+class ChangeVolumeInput(BaseModel):
+    volume_level: int = Field(description="The desired volume level as a percentage. E.g. 50 for 50% volume.")
+
+
 class LangchainTools:
     def __init__(self):
         self.open_app_tool = StructuredTool.from_function(
@@ -28,4 +32,11 @@ class LangchainTools:
             description="Open the specified app, or multiple specified apps. You should always try to provide "
                         "multiple apps to open at the same time as to minimize token usage.",
             args_schema=OpenAppInput
+        )
+
+        self.change_volume_tool = StructuredTool.from_function(
+            func=AutomationFunctions.change_volume,
+            name="ChangeVolume",
+            description="Change the system volume to the specified level.",
+            args_schema=ChangeVolumeInput
         )
