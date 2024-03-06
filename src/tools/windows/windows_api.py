@@ -1,3 +1,4 @@
+import asyncio
 import time
 import json
 import subprocess
@@ -17,6 +18,111 @@ from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
 import wmi
 
 
+def shutdown_computer():
+    c = wmi.WMI()
+    for thisOS in c.Win32_OperatingSystem():
+        # The flag 0 + 2 = 2 means "Shutdown"
+        thisOS.Win32Shutdown(2)
+        print("Shutting down the computer gracefully...")
+
+
+def restart_computer():
+    c = wmi.WMI()
+    for thisOS in c.Win32_OperatingSystem():
+        # The flag 0 + 4 = 4 means "Restart"
+        thisOS.Win32Shutdown(4)
+        print("Restarting the computer gracefully...")
+
+
+def sleep_computer():
+    c = wmi.WMI()
+    for thisOS in c.Win32_OperatingSystem():
+        thisOS.Win32Shutdown(1)
+        print("Putting the computer to sleep gracefully...")
+
+
+def toggle_theme_mode(dark_mode=True):
+    # Define registry path and value name
+    reg_path = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    value_name_ui = "AppsUseLightTheme"
+    value_name_system = "SystemUsesLightTheme"
+
+    # Define the value: 0 for Dark mode, 1 for Light mode
+    value_data = 0 if dark_mode else 1
+
+    try:
+        # Open the registry key
+        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as hkey:
+            with winreg.OpenKey(hkey, reg_path, 0, winreg.KEY_WRITE) as reg_key:
+                # Set the value for both UI and system
+                winreg.SetValueEx(reg_key, value_name_ui, 0, winreg.REG_DWORD, value_data)
+                winreg.SetValueEx(reg_key, value_name_system, 0, winreg.REG_DWORD, value_data)
+                print(f"Theme set to {'Dark' if dark_mode else 'Light'} mode.")
+
+                try:
+                    c = wmi.WMI()
+                    for process in c.Win32_Process(name="explorer.exe"):
+                        process.Terminate()  # Terminate existing explorer.exe process
+
+                    # Start a new instance of explorer.exe
+                    c.Win32_Process.Create(CommandLine="explorer.exe")
+                    print("Explorer.exe restarted successfully.")
+                except Exception as e:
+                    print(f"Failed to restart explorer.exe: {e}")
+    except Exception as e:
+        print(f"Failed to change theme mode: {e}")
+
+
+def toggle_night_light(enable_night_mode):
+    STATUS_PATH = "Software\\Microsoft\\Windows\\CurrentVersion\\CloudStore\\Store\\DefaultAccount\\Current\\default$windows.data.bluelightreduction.bluelightreductionstate\\windows.data.bluelightreduction.bluelightreductionstate"
+    STATE_VALUE_NAME = "Data"
+
+    def get_night_light_state_data():
+        try:
+            hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_READ)
+            value, regtype = winreg.QueryValueEx(hKey, STATE_VALUE_NAME)
+            winreg.CloseKey(hKey)
+            if regtype == winreg.REG_BINARY:
+                return value
+        except Exception as e:
+            print(f"Error getting night light state: {e}")
+            return False
+
+    def write_data_to_registry(byte_array):
+        try:
+            hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(hKey, STATE_VALUE_NAME, 0, winreg.REG_BINARY, byte_array)
+            winreg.CloseKey(hKey)
+            return True
+        except Exception as e:
+            print(f"Error writing night light state: {e}")
+            return False
+
+    value = get_night_light_state_data()
+    if value:
+        reg_val = bytearray(value)
+        write_data_to_registry(reg_val)
+        print("Night Light state changed successfully.")
+    else:
+        print("Failed to toggle Night Light.")
+
+
+async def bluetooth_power(turn_on):
+    all_radios = await Radio.get_radios_async()
+    for this_radio in all_radios:
+        if this_radio.kind == RadioKind.BLUETOOTH:
+            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
+            print(f"Bluetooth turned {'on' if turn_on else 'off'}.")
+
+
+async def toggle_wifi(turn_on):
+    all_radios = await Radio.get_radios_async()
+    for this_radio in all_radios:
+        if this_radio.kind == RadioKind.WI_FI:  # Check if the radio is WiFi
+            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
+            print(f"WiFi turned {'on' if turn_on else 'off'}.")
+
+
 class OpenAppEnum(str, Enum):
     left = 'left'
     right = 'right'
@@ -25,6 +131,22 @@ class OpenAppEnum(str, Enum):
     top_right = 'top right'
     bottom_right = 'bottom right'
     invalid = 'invalid'
+
+
+# this is a enum with functions as values
+class OpenAppEnum(Enum):
+    SHUT_DOWN_COMPUTER = shutdown_computer
+    RESTART_COMPUTER = restart_computer
+    SLEEP_COMPUTER = sleep_computer
+    TURN_ON_DARK_MODE = toggle_theme_mode
+    TURN_ON_LIGHT_MODE = toggle_theme_mode
+    TURN_ON_NIGHT_LIGHT = toggle_night_light
+    TURN_OFF_NIGHT_LIGHT = toggle_night_light
+    TURN_ON_BLUETOOTH = bluetooth_power
+    TURN_OFF_BLUETOOTH = bluetooth_power
+    TURN_ON_WIFI = toggle_wifi
+    TURN_OFF_WIFI = toggle_wifi
+    INVALID = None
 
 
 class AutomationFunctions:
@@ -64,16 +186,47 @@ class AutomationFunctions:
         # Get the default audio device using AudioUtilities
         devices = AudioUtilities.GetSpeakers()
 
-        # Get the interface to the volume control
-        interface = devices.Activate(
-            IAudioEndpointVolume._iid_,
-            CLSCTX_ALL,
-            None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
+    @staticmethod
+    def set_brightness(level):
+        # Initialize the WMI interface
+        wmi_interface = wmi.WMI(namespace='wmi')
 
-        # Set the master volume to the desired level
-        volume.SetMasterVolumeLevelScalar(volume_level, None)
-        print(f"System volume set to {volume_level}%")
+        # Get the 'WmiMonitorBrightnessMethods' class to access the brightness methods
+        methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
+
+        # Set the brightness level
+        methods.WmiSetBrightness(Brightness=level, Timeout=0)
+
+        print(f"Brightness set to {level}%.")
+
+    @staticmethod
+    def windows_settings_interaction(interaction):
+        try:
+            enum_value = OpenAppEnum[interaction.upper()]
+            if enum_value != OpenAppEnum.INVALID:
+                func = enum_value.value
+                if enum_value == OpenAppEnum.SHUT_DOWN_COMPUTER:
+                    func()
+                elif enum_value == OpenAppEnum.RESTART_COMPUTER:
+                    func()
+                elif enum_value == OpenAppEnum.SLEEP_COMPUTER:
+                    func()
+                elif enum_value in [OpenAppEnum.TURN_ON_DARK_MODE, OpenAppEnum.TURN_ON_LIGHT_MODE]:
+                    dark_mode = enum_value == OpenAppEnum.TURN_ON_DARK_MODE
+                    func(dark_mode)
+                elif enum_value in [OpenAppEnum.TURN_ON_NIGHT_LIGHT, OpenAppEnum.TURN_OFF_NIGHT_LIGHT]:
+                    enable_night_mode = enum_value == OpenAppEnum.TURN_ON_NIGHT_LIGHT
+                    func(enable_night_mode)
+                elif enum_value in [OpenAppEnum.TURN_ON_BLUETOOTH, OpenAppEnum.TURN_OFF_BLUETOOTH]:
+                    turn_on = enum_value == OpenAppEnum.TURN_ON_BLUETOOTH
+                    asyncio.run(func(turn_on))
+                elif enum_value in [OpenAppEnum.TURN_ON_WIFI, OpenAppEnum.TURN_OFF_WIFI]:
+                    turn_on = enum_value == OpenAppEnum.TURN_ON_WIFI
+                    asyncio.run(func(turn_on))
+            else:
+                print(f"Invalid interaction: {interaction}")
+        except KeyError:
+            print(f"Invalid interaction: {interaction}")
 
 
 def find_and_run_app(app_name):
@@ -134,158 +287,3 @@ def set_app_location(app_name, location):
     elif location == "bottom right":
         window.moveTo(screen_width // 2, screen_height // 2)
         window.resizeTo(screen_width // 2, screen_height // 2)
-
-
-def set_brightness(level):
-    # Initialize the WMI interface
-    wmi_interface = wmi.WMI(namespace='wmi')
-
-    # Get the 'WmiMonitorBrightnessMethods' class to access the brightness methods
-    methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
-
-    # Set the brightness level
-    # The first parameter (Timeout) is set to 0, as it's not used in this context
-    methods.WmiSetBrightness(Brightness=level, Timeout=0)
-
-    print(f"Brightness set to {level}%.")
-
-
-def shutdown_computer():
-    c = wmi.WMI()
-    for thisOS in c.Win32_OperatingSystem():
-        # The flag 0 + 2 = 2 means "Shutdown"
-        thisOS.Win32Shutdown(2)
-        print("Shutting down the computer gracefully...")
-
-
-def restart_computer():
-    c = wmi.WMI()
-    for thisOS in c.Win32_OperatingSystem():
-        # The flag 0 + 4 = 4 means "Restart"
-        thisOS.Win32Shutdown(4)
-        print("Restarting the computer gracefully...")
-
-
-def put_computer_to_sleep():
-    c = wmi.WMI()
-    for thisOS in c.Win32_OperatingSystem():
-        thisOS.Win32Shutdown(1)
-        print("Putting the computer to sleep gracefully...")
-
-
-def toggle_theme_mode(dark_mode=True):
-    # Define registry path and value name
-    reg_path = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
-    value_name_ui = "AppsUseLightTheme"
-    value_name_system = "SystemUsesLightTheme"
-
-    # Define the value: 0 for Dark mode, 1 for Light mode
-    value_data = 0 if dark_mode else 1
-
-    try:
-        # Open the registry key
-        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as hkey:
-            with winreg.OpenKey(hkey, reg_path, 0, winreg.KEY_WRITE) as reg_key:
-                # Set the value for both UI and system
-                winreg.SetValueEx(reg_key, value_name_ui, 0, winreg.REG_DWORD, value_data)
-                winreg.SetValueEx(reg_key, value_name_system, 0, winreg.REG_DWORD, value_data)
-                print(f"Theme set to {'Dark' if dark_mode else 'Light'} mode.")
-
-                try:
-                    c = wmi.WMI()
-                    for process in c.Win32_Process(name="explorer.exe"):
-                        process.Terminate()  # Terminate existing explorer.exe process
-
-                    # Start a new instance of explorer.exe
-                    c.Win32_Process.Create(CommandLine="explorer.exe")
-                    print("Explorer.exe restarted successfully.")
-                except Exception as e:
-                    print(f"Failed to restart explorer.exe: {e}")
-    except Exception as e:
-        print(f"Failed to change theme mode: {e}")
-
-
-def toggle_night_light():
-    STATUS_PATH = "Software\\Microsoft\\Windows\\CurrentVersion\\CloudStore\\Store\\DefaultAccount\\Current\\default$windows.data.bluelightreduction.bluelightreductionstate\\windows.data.bluelightreduction.bluelightreductionstate"
-    STATE_VALUE_NAME = "Data"
-
-    def get_night_light_state_data():
-        try:
-            hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_READ)
-            value, regtype = winreg.QueryValueEx(hKey, STATE_VALUE_NAME)
-            winreg.CloseKey(hKey)
-            if regtype == winreg.REG_BINARY:
-                return value
-        except Exception as e:
-            print(f"Error getting night light state: {e}")
-        return False
-
-    def process_night_light_state_data(byte_array):
-        night_light_is_on = False
-        ch = byte_array[18]
-        size = len(byte_array)
-
-        if ch == 0x15:
-            night_light_is_on = True
-            for i in range(10, 15):
-                ch = byte_array[i]
-                if ch != 0xff:
-                    byte_array[i] += 1
-                    break
-            byte_array[18] = 0x13
-            for i in range(24, 22, -1):
-                for j in range(i, size - 2):
-                    byte_array[j] = byte_array[j + 1]
-        elif ch == 0x13:
-            night_light_is_on = False
-            for i in range(10, 15):
-                ch = byte_array[i]
-                if ch != 0xff:
-                    byte_array[i] += 1
-                    break
-            byte_array[18] = 0x15
-            n = 0
-            while n < 2:
-                for j in range(size - 1, 23, -1):
-                    byte_array[j] = byte_array[j - 1]
-                n += 1
-            byte_array[23] = 0x10
-            byte_array[24] = 0x00
-            # extend array
-            byte_array.extend(bytearray(2))
-        return night_light_is_on
-
-    def write_data_to_registry(byte_array):
-        try:
-            hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_SET_VALUE)
-            winreg.SetValueEx(hKey, STATE_VALUE_NAME, 0, winreg.REG_BINARY, byte_array)
-            winreg.CloseKey(hKey)
-            return True
-        except Exception as e:
-            print(f"Error writing night light state: {e}")
-        return False
-
-    value = get_night_light_state_data()
-    if value:
-        reg_val = bytearray(value)
-        process_night_light_state_data(reg_val)
-        write_data_to_registry(reg_val)
-        print("Night Light toggled successfully.")
-    else:
-        print("Failed to toggle Night Light.")
-
-
-async def bluetooth_power(turn_on):
-    all_radios = await Radio.get_radios_async()
-    for this_radio in all_radios:
-        if this_radio.kind == RadioKind.BLUETOOTH:
-            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
-            print(f"Bluetooth turned {'on' if turn_on else 'off'}.")
-
-
-async def toggle_wifi(turn_on):
-    all_radios = await Radio.get_radios_async()
-    for this_radio in all_radios:
-        if this_radio.kind == RadioKind.WI_FI:  # Check if the radio is WiFi
-            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
-            print(f"WiFi turned {'on' if turn_on else 'off'}.")
