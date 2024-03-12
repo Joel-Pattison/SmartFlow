@@ -134,19 +134,18 @@ class OpenAppEnum(str, Enum):
 
 
 # this is a enum with functions as values
-class OpenAppEnum(Enum):
-    SHUT_DOWN_COMPUTER = shutdown_computer
-    RESTART_COMPUTER = restart_computer
-    SLEEP_COMPUTER = sleep_computer
-    TURN_ON_DARK_MODE = toggle_theme_mode
-    TURN_ON_LIGHT_MODE = toggle_theme_mode
-    TURN_ON_NIGHT_LIGHT = toggle_night_light
-    TURN_OFF_NIGHT_LIGHT = toggle_night_light
-    TURN_ON_BLUETOOTH = bluetooth_power
-    TURN_OFF_BLUETOOTH = bluetooth_power
-    TURN_ON_WIFI = toggle_wifi
-    TURN_OFF_WIFI = toggle_wifi
-    INVALID = None
+class WindowsSettingsInteractionEnum(str, Enum):
+    SHUT_DOWN_COMPUTER = "shut_down_computer"
+    RESTART_COMPUTER = "restart_computer"
+    SLEEP_COMPUTER = "sleep_computer"
+    TURN_ON_DARK_MODE = "turn_on_dark_mode"
+    TURN_ON_LIGHT_MODE = "turn_on_light_mode"
+    TURN_ON_NIGHT_LIGHT = "turn_on_night_light"
+    TURN_OFF_NIGHT_LIGHT = "turn_off_night_light"
+    TURN_ON_BLUETOOTH = "turn_on_bluetooth"
+    TURN_OFF_BLUETOOTH = "turn_off_bluetooth"
+    TURN_ON_WIFI = "turn_on_wifi"
+    TURN_OFF_WIFI = "turn_off_wifi"
 
 
 class AutomationFunctions:
@@ -200,33 +199,31 @@ class AutomationFunctions:
         print(f"Brightness set to {level}%.")
 
     @staticmethod
-    def windows_settings_interaction(interaction):
+    def windows_settings_interaction(interaction: WindowsSettingsInteractionEnum):
+        print("Interaction received:", interaction)
         try:
-            enum_value = OpenAppEnum[interaction.upper()]
-            if enum_value != OpenAppEnum.INVALID:
-                func = enum_value.value
-                if enum_value == OpenAppEnum.SHUT_DOWN_COMPUTER:
-                    func()
-                elif enum_value == OpenAppEnum.RESTART_COMPUTER:
-                    func()
-                elif enum_value == OpenAppEnum.SLEEP_COMPUTER:
-                    func()
-                elif enum_value in [OpenAppEnum.TURN_ON_DARK_MODE, OpenAppEnum.TURN_ON_LIGHT_MODE]:
-                    dark_mode = enum_value == OpenAppEnum.TURN_ON_DARK_MODE
-                    func(dark_mode)
-                elif enum_value in [OpenAppEnum.TURN_ON_NIGHT_LIGHT, OpenAppEnum.TURN_OFF_NIGHT_LIGHT]:
-                    enable_night_mode = enum_value == OpenAppEnum.TURN_ON_NIGHT_LIGHT
-                    func(enable_night_mode)
-                elif enum_value in [OpenAppEnum.TURN_ON_BLUETOOTH, OpenAppEnum.TURN_OFF_BLUETOOTH]:
-                    turn_on = enum_value == OpenAppEnum.TURN_ON_BLUETOOTH
-                    asyncio.run(func(turn_on))
-                elif enum_value in [OpenAppEnum.TURN_ON_WIFI, OpenAppEnum.TURN_OFF_WIFI]:
-                    turn_on = enum_value == OpenAppEnum.TURN_ON_WIFI
-                    asyncio.run(func(turn_on))
-            else:
-                print(f"Invalid interaction: {interaction}")
-        except KeyError:
-            print(f"Invalid interaction: {interaction}")
+            if interaction == WindowsSettingsInteractionEnum.SHUT_DOWN_COMPUTER:
+                shutdown_computer()
+            elif interaction == WindowsSettingsInteractionEnum.RESTART_COMPUTER:
+                restart_computer()
+            elif interaction == WindowsSettingsInteractionEnum.SLEEP_COMPUTER:
+                sleep_computer()
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE, WindowsSettingsInteractionEnum.TURN_ON_LIGHT_MODE]:
+                dark_mode = interaction == WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE
+                toggle_theme_mode(dark_mode)
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT, WindowsSettingsInteractionEnum.TURN_OFF_NIGHT_LIGHT]:
+                enable_night_mode = interaction == WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT
+                print(enable_night_mode)
+                toggle_night_light(enable_night_mode)
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH, WindowsSettingsInteractionEnum.TURN_OFF_BLUETOOTH]:
+                turn_on = interaction == WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH
+                asyncio.run(bluetooth_power(turn_on))
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_WIFI, WindowsSettingsInteractionEnum.TURN_OFF_WIFI]:
+                turn_on = interaction == WindowsSettingsInteractionEnum.TURN_ON_WIFI
+                asyncio.run(toggle_wifi(turn_on))
+        except Exception as e:
+            print(f"Error performing interaction: {e.with_traceback(None)}")
+
 
 
 def find_and_run_app(app_name):

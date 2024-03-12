@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents.format_scratchpad.openai_tools import format_to_openai_tool_messages
 from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
 from langchain.agents import AgentExecutor
-from src.tools.windows.windows_api import AutomationFunctions, OpenAppEnum
+from src.tools.windows.windows_api import AutomationFunctions, OpenAppEnum, WindowsSettingsInteractionEnum
 import langchain
 import os
 
@@ -25,10 +25,7 @@ class ChangeVolumeInput(BaseModel):
 
 
 class WindowsSettingsInteractionInput(BaseModel):
-    interaction: str = Field(description="The interaction to perform with the Windows settings. "
-                                         "Valid interactions: shutdown, restart, sleep, dark_mode, light_mode, "
-                                         "night_light_on, night_light_off, bluetooth_on, bluetooth_off, "
-                                         "wifi_on, wifi_off.")
+    interaction: WindowsSettingsInteractionEnum = Field(description="The interaction to perform with the Windows settings. ")
 
 
 class LangchainTools:
