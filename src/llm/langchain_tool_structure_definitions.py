@@ -1,16 +1,7 @@
 from langchain_core.tools import StructuredTool
-from langchain_openai import ChatOpenAI
-from langchain.agents import tool
 from pydantic.v1 import BaseModel, Field
-from enum import Enum
 from typing import List, Optional
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents.format_scratchpad.openai_tools import format_to_openai_tool_messages
-from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
-from langchain.agents import AgentExecutor
 from src.tools.windows.windows_api import AutomationFunctions, OpenAppEnum, WindowsSettingsInteractionEnum
-import langchain
-import os
 
 
 class OpenAppInput(BaseModel):

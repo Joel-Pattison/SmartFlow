@@ -6,14 +6,10 @@ import winreg
 from enum import Enum
 from typing import List, Optional
 
-from screeninfo import get_monitors
 import os
 import pyautogui
-import ctypes
 from pygetwindow import getWindowsWithTitle
-from ctypes import POINTER, cast
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from pycaw.pycaw import AudioUtilities
 from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
 import wmi
 

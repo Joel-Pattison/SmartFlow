@@ -1,4 +1,3 @@
-import time
 import json
 import subprocess
 from screeninfo import get_monitors

@@ -1,7 +1,5 @@
 import pyaudio
 import threading
-from pynput import keyboard
-import speech_recognition as sr
 import time
 
 

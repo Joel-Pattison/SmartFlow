@@ -1,8 +1,6 @@
 import torch
 import whisper
 import numpy as np
-import io
-import wave
 
 class Whisper:
     def __init__(self, model_name):

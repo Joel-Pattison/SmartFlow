@@ -1,7 +1,6 @@
 from pynput import keyboard
 import threading
 
-from src.voice.voice import Voice
 
 
 class KeyListener:
