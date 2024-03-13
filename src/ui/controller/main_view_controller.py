@@ -1,9 +1,7 @@
 import pyaudio
 from PyQt5.QtCore import QEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow
 from src.ui.view.main_view import Ui_Form
-from qframelesswindow import FramelessWindow, FramelessMainWindow, StandardTitleBar
-import sys
+from qframelesswindow import FramelessMainWindow
 
 
 def get_microphone_list():

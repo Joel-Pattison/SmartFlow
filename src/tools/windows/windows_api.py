@@ -1,17 +1,122 @@
+import asyncio
 import time
 import json
 import subprocess
+import winreg
 from enum import Enum
 from typing import List, Optional
 
-from screeninfo import get_monitors
 import os
 import pyautogui
-import ctypes
 from pygetwindow import getWindowsWithTitle
-from ctypes import POINTER, cast
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from pycaw.pycaw import AudioUtilities
+from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
+import wmi
+
+
+def shutdown_computer():
+    c = wmi.WMI()
+    for thisOS in c.Win32_OperatingSystem():
+        # The flag 0 + 2 = 2 means "Shutdown"
+        thisOS.Win32Shutdown(2)
+        print("Shutting down the computer gracefully...")
+
+
+def restart_computer():
+    c = wmi.WMI()
+    for thisOS in c.Win32_OperatingSystem():
+        # The flag 0 + 4 = 4 means "Restart"
+        thisOS.Win32Shutdown(4)
+        print("Restarting the computer gracefully...")
+
+
+def sleep_computer():
+    c = wmi.WMI()
+    for thisOS in c.Win32_OperatingSystem():
+        thisOS.Win32Shutdown(1)
+        print("Putting the computer to sleep gracefully...")
+
+
+def toggle_theme_mode(dark_mode=True):
+    # Define registry path and value name
+    reg_path = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    value_name_ui = "AppsUseLightTheme"
+    value_name_system = "SystemUsesLightTheme"
+
+    # Define the value: 0 for Dark mode, 1 for Light mode
+    value_data = 0 if dark_mode else 1
+
+    try:
+        # Open the registry key
+        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as hkey:
+            with winreg.OpenKey(hkey, reg_path, 0, winreg.KEY_WRITE) as reg_key:
+                # Set the value for both UI and system
+                winreg.SetValueEx(reg_key, value_name_ui, 0, winreg.REG_DWORD, value_data)
+                winreg.SetValueEx(reg_key, value_name_system, 0, winreg.REG_DWORD, value_data)
+                print(f"Theme set to {'Dark' if dark_mode else 'Light'} mode.")
+
+                try:
+                    c = wmi.WMI()
+                    for process in c.Win32_Process(name="explorer.exe"):
+                        process.Terminate()  # Terminate existing explorer.exe process
+
+                    # Start a new instance of explorer.exe
+                    c.Win32_Process.Create(CommandLine="explorer.exe")
+                    print("Explorer.exe restarted successfully.")
+                except Exception as e:
+                    print(f"Failed to restart explorer.exe: {e}")
+    except Exception as e:
+        print(f"Failed to change theme mode: {e}")
+
+
+def toggle_night_light(enable_night_mode):
+    STATUS_PATH = "Software\\Microsoft\\Windows\\CurrentVersion\\CloudStore\\Store\\DefaultAccount\\Current\\default$windows.data.bluelightreduction.bluelightreductionstate\\windows.data.bluelightreduction.bluelightreductionstate"
+    STATE_VALUE_NAME = "Data"
+
+    def get_night_light_state_data():
+        try:
+            hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_READ)
+            value, regtype = winreg.QueryValueEx(hKey, STATE_VALUE_NAME)
+            winreg.CloseKey(hKey)
+            if regtype == winreg.REG_BINARY:
+                return value
+        except Exception as e:
+            print(f"Error getting night light state: {e}")
+            return False
+
+    def write_data_to_registry(byte_array):
+        try:
+            hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(hKey, STATE_VALUE_NAME, 0, winreg.REG_BINARY, byte_array)
+            winreg.CloseKey(hKey)
+            return True
+        except Exception as e:
+            print(f"Error writing night light state: {e}")
+            return False
+
+    value = get_night_light_state_data()
+    if value:
+        reg_val = bytearray(value)
+        write_data_to_registry(reg_val)
+        print("Night Light state changed successfully.")
+    else:
+        print("Failed to toggle Night Light.")
+
+
+async def bluetooth_power(turn_on):
+    all_radios = await Radio.get_radios_async()
+    for this_radio in all_radios:
+        if this_radio.kind == RadioKind.BLUETOOTH:
+            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
+            print(f"Bluetooth turned {'on' if turn_on else 'off'}.")
+
+
+async def toggle_wifi(turn_on):
+    all_radios = await Radio.get_radios_async()
+    for this_radio in all_radios:
+        if this_radio.kind == RadioKind.WI_FI:  # Check if the radio is WiFi
+            await this_radio.set_state_async(RadioState.ON if turn_on else RadioState.OFF)
+            print(f"WiFi turned {'on' if turn_on else 'off'}.")
 
 
 class OpenAppEnum(str, Enum):
@@ -21,6 +126,22 @@ class OpenAppEnum(str, Enum):
     bottom_left = 'bottom left'
     top_right = 'top right'
     bottom_right = 'bottom right'
+    invalid = 'invalid'
+
+
+# this is a enum with functions as values
+class WindowsSettingsInteractionEnum(str, Enum):
+    SHUT_DOWN_COMPUTER = "shut_down_computer"
+    RESTART_COMPUTER = "restart_computer"
+    SLEEP_COMPUTER = "sleep_computer"
+    TURN_ON_DARK_MODE = "turn_on_dark_mode"
+    TURN_ON_LIGHT_MODE = "turn_on_light_mode"
+    TURN_ON_NIGHT_LIGHT = "turn_on_night_light"
+    TURN_OFF_NIGHT_LIGHT = "turn_off_night_light"
+    TURN_ON_BLUETOOTH = "turn_on_bluetooth"
+    TURN_OFF_BLUETOOTH = "turn_off_bluetooth"
+    TURN_ON_WIFI = "turn_on_wifi"
+    TURN_OFF_WIFI = "turn_off_wifi"
 
 
 class AutomationFunctions:
@@ -60,16 +181,45 @@ class AutomationFunctions:
         # Get the default audio device using AudioUtilities
         devices = AudioUtilities.GetSpeakers()
 
-        # Get the interface to the volume control
-        interface = devices.Activate(
-            IAudioEndpointVolume._iid_,
-            CLSCTX_ALL,
-            None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
+    @staticmethod
+    def set_brightness(level):
+        # Initialize the WMI interface
+        wmi_interface = wmi.WMI(namespace='wmi')
 
-        # Set the master volume to the desired level
-        volume.SetMasterVolumeLevelScalar(volume_level, None)
-        print(f"System volume set to {volume_level}%")
+        # Get the 'WmiMonitorBrightnessMethods' class to access the brightness methods
+        methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
+
+        # Set the brightness level
+        methods.WmiSetBrightness(Brightness=level, Timeout=0)
+
+        print(f"Brightness set to {level}%.")
+
+    @staticmethod
+    def windows_settings_interaction(interaction: WindowsSettingsInteractionEnum):
+        print("Interaction received:", interaction)
+        try:
+            if interaction == WindowsSettingsInteractionEnum.SHUT_DOWN_COMPUTER:
+                shutdown_computer()
+            elif interaction == WindowsSettingsInteractionEnum.RESTART_COMPUTER:
+                restart_computer()
+            elif interaction == WindowsSettingsInteractionEnum.SLEEP_COMPUTER:
+                sleep_computer()
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE, WindowsSettingsInteractionEnum.TURN_ON_LIGHT_MODE]:
+                dark_mode = interaction == WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE
+                toggle_theme_mode(dark_mode)
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT, WindowsSettingsInteractionEnum.TURN_OFF_NIGHT_LIGHT]:
+                enable_night_mode = interaction == WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT
+                print(enable_night_mode)
+                toggle_night_light(enable_night_mode)
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH, WindowsSettingsInteractionEnum.TURN_OFF_BLUETOOTH]:
+                turn_on = interaction == WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH
+                asyncio.run(bluetooth_power(turn_on))
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_WIFI, WindowsSettingsInteractionEnum.TURN_OFF_WIFI]:
+                turn_on = interaction == WindowsSettingsInteractionEnum.TURN_ON_WIFI
+                asyncio.run(toggle_wifi(turn_on))
+        except Exception as e:
+            print(f"Error performing interaction: {e.with_traceback(None)}")
+
 
 
 def find_and_run_app(app_name):
