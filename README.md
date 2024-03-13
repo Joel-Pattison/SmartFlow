@@ -6,7 +6,6 @@ pip install -r requirements.txt
 ```
 
 ## Install CUDA-enabled torch version
-* NOTE: currently requires an NVIDIA GPU.
 * OPTIONAL: Manually installing the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads) may be required depending on your installed NVIDIA driver version.
 ### Run:
 ```bash
