@@ -27,7 +27,13 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.voice_models = voice_models
         self.setupUi(self)
         self.send_loading_ring.hide()
+        self.action_description_lbl.hide()
+        self.action_execute_btn.hide()
+        self.action_cancel_btn.hide()
+        self.action_description_background_lbl.hide()
         self.is_entering_keybind = False
+        self.is_action_confirmer_open = False
+        self.last_action_confirmer_result = False
 
         self.populate_voice_model_cmb()
         self.load_voice_model_settings()
@@ -58,6 +64,21 @@ class MainWindow(FramelessMainWindow, Ui_Form):
 
     def populate_voice_model_cmb(self):
         self.voice_cmb.addItems(self.voice_models.keys())
+
+    def change_ui_action_confirmer_visual(self, is_open):
+        self.action_description_lbl.setVisible(is_open)
+        self.action_execute_btn.setVisible(is_open)
+        self.action_cancel_btn.setVisible(is_open)
+        self.action_description_background_lbl.setVisible(is_open)
+        self.is_action_confirmer_open = is_open
+
+    def on_action_execute_btn_clicked(self):
+        self.last_action_confirmer_result = True
+        self.change_ui_action_confirmer_visual(False)
+
+    def on_action_cancel_btn_clicked(self):
+        self.last_action_confirmer_result = False
+        self.change_ui_action_confirmer_visual(False)
 
     def load_voice_model_settings(self):
         if self.settings_manager.get_voice_model() is None:
