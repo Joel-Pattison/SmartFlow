@@ -24,11 +24,12 @@ if __name__ == "__main__":
     voice_models = initialize_voice_models()
 
     settings_manager = SettingsManager()
-    llm_conversation = LLMConversation(settings_manager)
 
     app = QApplication(sys.argv)
-    win = MainWindow(settings_manager, llm_conversation, voice_models)
+    win = MainWindow(settings_manager, voice_models)
     win.show()
+
+    llm_conversation = LLMConversation(settings_manager, win)
 
     global_voice = Voice(settings_manager, llm_conversation, voice_models)
     key_listener = KeyListener(global_voice, win, settings_manager)
