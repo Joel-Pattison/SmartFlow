@@ -3,6 +3,7 @@ from PyQt5.QtCore import QEvent
 
 from src.ui.view.main_view import Ui_Form
 from qframelesswindow import FramelessMainWindow
+from PyQt5.QtCore import pyqtSignal
 
 
 def get_microphone_list():
@@ -21,6 +22,8 @@ def get_microphone_list():
 
 
 class MainWindow(FramelessMainWindow, Ui_Form):
+    update_voice_text_signal = pyqtSignal(str)
+
     def __init__(self, settings_manager, voice_models):
         super().__init__()
         self.llm_conversation = None
@@ -37,6 +40,8 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.is_entering_keybind = False
         self.action_to_execute = None
         self.has_confirmed_action = False
+
+        self.update_voice_text_signal.connect(self.update_voice_text_label)
 
         self.populate_voice_model_cmb()
         self.load_voice_model_settings()
@@ -165,3 +170,6 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         print("Microphone changed: " + self.microphone_cmb.currentText())
         self.settings_manager.set_microphone_name(self.microphone_cmb.currentText())
         self.settings_manager.set_microphone_index(self.microphone_cmb.currentIndex())
+
+    def update_voice_text_label(self, text):
+        self.voice_text_txt.setText(text)
