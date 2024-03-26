@@ -136,6 +136,11 @@ class OpenAppEnum(str, Enum):
     invalid = 'invalid'
 
 
+class AmPmEnum(str, Enum):
+    am = 'am'
+    pm = 'pm'
+
+
 # this is a enum with functions as values
 class WindowsSettingsInteractionEnum(str, Enum):
     SHUT_DOWN_COMPUTER = "shut_down_computer"
@@ -268,7 +273,8 @@ class AutomationFunctions:
     def write_email(self, recipient_name, subject, body):
         if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
             self.win.bind_action_to_execute(lambda: self.write_email(recipient_name, subject, body))
-            self.win.display_action_confirmer(f"Write email to {recipient_name} with subject '{subject}' and body '{body}'?")
+            self.win.display_action_confirmer(
+                f"Write email to {recipient_name} with subject '{subject}' and body '{body}'?")
             return
 
         try:
@@ -336,6 +342,41 @@ class AutomationFunctions:
         main_win.child_window(title="Save", control_type="Button").click()
 
         main_win.child_window(title="Start", control_type="Button").click()
+
+    def create_alarm(self, hours, minutes, am_pm: AmPmEnum):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            formatted_minutes = f"{minutes:02d}"
+            time_str = f"{hours}:{formatted_minutes} {am_pm}"
+            self.win.bind_action_to_execute(lambda: self.create_alarm(hours, minutes, am_pm))
+            self.win.display_action_confirmer(f"Create alarm for {time_str}?")
+            return
+
+        alarms_app_pfn = "Microsoft.WindowsAlarms_8wekyb3d8bbwe!App"
+
+        Application().start(f'explorer.exe shell:appsFolder\\{alarms_app_pfn}')
+
+        app = Application(backend="uia").connect(title="Clock", timeout=20)
+
+        main_win = app.window(title="Clock")
+
+        alarm_button = main_win.child_window(title="Alarm", auto_id="AlarmButton", control_type="ListItem")
+        alarm_button.select()
+
+        main_win.child_window(title="Add an alarm", control_type="Button").click()
+
+        keyboard = Controller()
+
+        main_win.child_window(auto_id="HourPicker", control_type="Custom").set_focus()
+        keyboard.type(str(hours))
+
+        main_win.child_window(auto_id="MinutePicker", control_type="Custom").set_focus()
+        keyboard.type(str(minutes))
+
+        main_win.child_window(auto_id="TwelveHourPicker", control_type="Custom").set_focus()
+        keyboard.type(am_pm)
+
+        main_win.child_window(title="Save", control_type="Button").click()
 
 
 def find_email_by_name(recipient_name):

@@ -1,7 +1,7 @@
 from langchain_core.tools import StructuredTool
 from pydantic.v1 import BaseModel, Field
 from typing import List, Optional
-from src.tools.windows.windows_api import AutomationFunctions, OpenAppEnum, WindowsSettingsInteractionEnum
+from src.tools.windows.windows_api import AutomationFunctions, OpenAppEnum, WindowsSettingsInteractionEnum, AmPmEnum
 
 
 class OpenAppInput(BaseModel):
@@ -30,6 +30,12 @@ class CreateTimerInput(BaseModel):
     hours: int = Field(description="The number of hours for the timer.")
     minutes: int = Field(description="The number of minutes for the timer.")
     seconds: int = Field(description="The number of seconds for the timer.")
+
+
+class CreateAlarmInput(BaseModel):
+    hours: int = Field(description="The hour for the alarm.")
+    minutes: int = Field(description="The minute for the alarm.")
+    am_pm: AmPmEnum = Field(description="The AM/PM for the alarm.")
 
 
 class LangchainTools:
@@ -71,4 +77,11 @@ class LangchainTools:
             name="CreateTimer",
             description="Create a timer for the specified duration.",
             args_schema=CreateTimerInput
+        )
+
+        self.create_alarm_tool = StructuredTool.from_function(
+            func=automation_functions.create_alarm,
+            name="CreateAlarm",
+            description="Create an alarm for the specified time.",
+            args_schema=CreateAlarmInput
         )
