@@ -434,6 +434,18 @@ class AutomationFunctions:
         except subprocess.CalledProcessError as e:
             print(f"Failed to uninstall {app_name}: {e}")
 
+    def open_website(self, website_url):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.open_website(website_url))
+            self.win.display_action_confirmer(f"Open website {website_url}?")
+            return
+
+        try:
+            webbrowser.open(website_url, new=2)
+            print(f"Website opened successfully: {website_url}")
+        except Exception as e:
+            print(f"Failed to open the website: {e}")
+
 
 def find_email_by_name(recipient_name):
     # Connect to Outlook

@@ -46,6 +46,10 @@ class UninstallApplicationInput(BaseModel):
     app_name: str = Field(description="The name of the application to uninstall.")
 
 
+class OpenWebsiteInput(BaseModel):
+    website_url: str = Field(description="The URL of the website to open in the format 'https://www.example.com'.")
+
+
 class LangchainTools:
     def __init__(self, win, settings_manager):
         automation_functions = AutomationFunctions(win, settings_manager)
@@ -106,4 +110,11 @@ class LangchainTools:
             name="UninstallApplication",
             description="Uninstall the specified application.",
             args_schema=UninstallApplicationInput
+        )
+
+        self.open_website_tool = StructuredTool.from_function(
+            func=automation_functions.open_website,
+            name="OpenWebsite",
+            description="Open the specified website in the default web browser.",
+            args_schema=OpenWebsiteInput
         )
