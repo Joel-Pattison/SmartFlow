@@ -12,7 +12,7 @@ from src.llm.langchain_tool_structure_definitions import LangchainTools
 
 class LangchainConversation:
     def __init__(self, settings_manager, win):
-        langchain_tools = LangchainTools(win)
+        langchain_tools = LangchainTools(win, settings_manager)
         llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 
         prompt = ChatPromptTemplate.from_messages(

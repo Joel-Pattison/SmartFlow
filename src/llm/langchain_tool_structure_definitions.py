@@ -20,8 +20,8 @@ class WindowsSettingsInteractionInput(BaseModel):
 
 
 class LangchainTools:
-    def __init__(self, win):
-        automation_functions = AutomationFunctions(win)
+    def __init__(self, win, settings_manager):
+        automation_functions = AutomationFunctions(win, settings_manager)
 
         self.open_app_tool = StructuredTool.from_function(
             func=automation_functions.open_app,
