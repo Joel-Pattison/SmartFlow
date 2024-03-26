@@ -147,6 +147,10 @@ class WindowsSettingsInteractionEnum(str, Enum):
 class AutomationFunctions:
     app_profiles = {}
 
+    def __init__(self, win, settings_manager):
+        self.win = win
+        self.settings_manager = settings_manager
+
     @staticmethod
     def save_profile(profile_name):
         if not os.path.exists("profiles"):
@@ -161,8 +165,13 @@ class AutomationFunctions:
             for app_name, location in AutomationFunctions.app_profiles.items():
                 AutomationFunctions.open_app([app_name], [location])
 
-    @staticmethod
-    def open_app(app_names: List[str], locations: Optional[List[OpenAppEnum]] = None):
+    def open_app(self, app_names: List[str], locations: Optional[List[OpenAppEnum]] = None):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.open_app(app_names, locations))
+            self.win.display_action_confirmer(f"Open app(s) {app_names} at location(s) {locations}?")
+            return
+
         print(app_names, locations)
         if locations is None:
             locations = ["NULL"] * len(app_names)
@@ -173,16 +182,25 @@ class AutomationFunctions:
                 set_app_location(app_name, location)
             AutomationFunctions.app_profiles[app_name] = location
 
-    @staticmethod
-    def change_volume(volume_level):
+    def change_volume(self, volume_level):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.change_volume(volume_level))
+            self.win.display_action_confirmer(f"Change volume to {volume_level}%?")
+            return
+
         # Convert the volume from percentage to a float between 0.0 and 1.0
         volume_level = volume_level / 100.0
 
         # Get the default audio device using AudioUtilities
         devices = AudioUtilities.GetSpeakers()
 
-    @staticmethod
-    def set_brightness(level):
+    def set_brightness(self, level):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.set_brightness(level))
+            self.win.display_action_confirmer(f"Set brightness to {level}%?")
+            return
+
         # Initialize the WMI interface
         wmi_interface = wmi.WMI(namespace='wmi')
 
@@ -194,8 +212,13 @@ class AutomationFunctions:
 
         print(f"Brightness set to {level}%.")
 
-    @staticmethod
-    def windows_settings_interaction(interaction: WindowsSettingsInteractionEnum):
+    def windows_settings_interaction(self, interaction: WindowsSettingsInteractionEnum):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.windows_settings_interaction(interaction))
+            self.win.display_action_confirmer(f"Perform {interaction} action?")
+            return
+
         print("Interaction received:", interaction)
         try:
             if interaction == WindowsSettingsInteractionEnum.SHUT_DOWN_COMPUTER:
@@ -204,22 +227,25 @@ class AutomationFunctions:
                 restart_computer()
             elif interaction == WindowsSettingsInteractionEnum.SLEEP_COMPUTER:
                 sleep_computer()
-            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE, WindowsSettingsInteractionEnum.TURN_ON_LIGHT_MODE]:
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE,
+                                 WindowsSettingsInteractionEnum.TURN_ON_LIGHT_MODE]:
                 dark_mode = interaction == WindowsSettingsInteractionEnum.TURN_ON_DARK_MODE
                 toggle_theme_mode(dark_mode)
-            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT, WindowsSettingsInteractionEnum.TURN_OFF_NIGHT_LIGHT]:
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT,
+                                 WindowsSettingsInteractionEnum.TURN_OFF_NIGHT_LIGHT]:
                 enable_night_mode = interaction == WindowsSettingsInteractionEnum.TURN_ON_NIGHT_LIGHT
                 print(enable_night_mode)
                 toggle_night_light(enable_night_mode)
-            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH, WindowsSettingsInteractionEnum.TURN_OFF_BLUETOOTH]:
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH,
+                                 WindowsSettingsInteractionEnum.TURN_OFF_BLUETOOTH]:
                 turn_on = interaction == WindowsSettingsInteractionEnum.TURN_ON_BLUETOOTH
                 asyncio.run(bluetooth_power(turn_on))
-            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_WIFI, WindowsSettingsInteractionEnum.TURN_OFF_WIFI]:
+            elif interaction in [WindowsSettingsInteractionEnum.TURN_ON_WIFI,
+                                 WindowsSettingsInteractionEnum.TURN_OFF_WIFI]:
                 turn_on = interaction == WindowsSettingsInteractionEnum.TURN_ON_WIFI
                 asyncio.run(toggle_wifi(turn_on))
         except Exception as e:
             print(f"Error performing interaction: {e.with_traceback(None)}")
-
 
 
 def find_and_run_app(app_name):
