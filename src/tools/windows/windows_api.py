@@ -385,24 +385,54 @@ class AutomationFunctions:
             self.win.display_action_confirmer(f"Install application {app_name}?")
             return
 
-        # Search for the app
         search_command = f"winget search {app_name} --accept-source-agreements"
         search_result = subprocess.run(search_command, check=True, shell=True, text=True, capture_output=True).stdout
 
         pattern = fr'^{app_name}\s+([^\s]+)\s+Unknown\s+msstore$'
 
-        # Search for the app ID using the refined regex pattern
         match = re.search(pattern, search_result, re.MULTILINE | re.IGNORECASE)
 
         app_id = match.group(1)
 
-        # Install the app
         install_command = f"winget install --id={app_id} --accept-package-agreements --accept-source-agreements"
         try:
             subprocess.run(install_command, check=True, shell=True)
             print(f"The app '{app_name}' has been successfully installed.")
         except subprocess.CalledProcessError as e:
             print(f"Failed to install the app '{app_name}': {e}")
+
+    def uninstall_application(self, app_name):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.uninstall_application(app_name))
+            self.win.display_action_confirmer(f"Uninstall application {app_name}?")
+            return
+
+        list_command = "winget list --accept-source-agreements"
+        try:
+            list_result = subprocess.run(list_command, check=True, shell=True, text=True, capture_output=True).stdout
+        except subprocess.CalledProcessError as e:
+            print(f"Error listing installed apps: {e}")
+            return
+
+        print(list_result)
+
+        pattern = fr'{app_name}\s+([^\s]+)\s+'
+        match = re.search(pattern, list_result, re.IGNORECASE)
+
+        if not match:
+            print(f"{app_name} does not appear to be installed.")
+            return
+
+        app_id = match.group(1)
+
+        # Step 3: Uninstall the app
+        uninstall_command = f"winget uninstall --id={app_id} --accept-source-agreements"
+        try:
+            subprocess.run(uninstall_command, check=True, shell=True)
+            print(f"The app {app_name} has been successfully uninstalled.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to uninstall {app_name}: {e}")
 
 
 def find_email_by_name(recipient_name):

@@ -42,6 +42,10 @@ class InstallApplicationInput(BaseModel):
     app_name: str = Field(description="The name of the application to install.")
 
 
+class UninstallApplicationInput(BaseModel):
+    app_name: str = Field(description="The name of the application to uninstall.")
+
+
 class LangchainTools:
     def __init__(self, win, settings_manager):
         automation_functions = AutomationFunctions(win, settings_manager)
@@ -95,4 +99,11 @@ class LangchainTools:
             name="InstallApplication",
             description="Install the specified application.",
             args_schema=InstallApplicationInput
+        )
+
+        self.uninstall_application_tool = StructuredTool.from_function(
+            func=automation_functions.uninstall_application,
+            name="UninstallApplication",
+            description="Uninstall the specified application.",
+            args_schema=UninstallApplicationInput
         )
