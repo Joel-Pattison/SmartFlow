@@ -17,6 +17,8 @@ import wmi
 import webbrowser
 import win32com.client
 from fuzzywuzzy import process
+from pynput.keyboard import Controller
+from pywinauto.application import Application
 
 
 def shutdown_computer():
@@ -282,6 +284,58 @@ class AutomationFunctions:
                 print("Recipient not found in contacts.")
         except Exception as e:
             print(f"An error occurred: {e}")
+
+    def create_timer(self, hours, minutes, seconds):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            time_parts = []
+            if hours > 0:
+                time_parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
+            if minutes > 0:
+                time_parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+            if seconds > 0:
+                time_parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+
+            if len(time_parts) > 1:
+                time_str = ", ".join(time_parts[:-1]) + " and " + time_parts[-1]
+            elif time_parts:
+                time_str = time_parts[0]
+            else:
+                time_str = "0 seconds"
+
+            self.win.bind_action_to_execute(lambda: self.create_timer(hours, minutes, seconds))
+            self.win.display_action_confirmer(f"Create timer for {time_str}?")
+            return
+
+        # Use the PFN of the Windows Alarms & Clock app
+        alarms_app_pfn = "Microsoft.WindowsAlarms_8wekyb3d8bbwe!App"
+
+        # Launch the Alarms & Clock app using its PFN
+        Application().start(f'explorer.exe shell:appsFolder\\{alarms_app_pfn}')
+
+        app = Application(backend="uia").connect(title="Clock", timeout=20)
+
+        main_win = app.window(title="Clock")
+
+        alarm_button = main_win.child_window(title="Timer", auto_id="TimerButton", control_type="ListItem")
+        alarm_button.select()
+
+        main_win.child_window(title="Add new timer", control_type="Button").click()
+
+        keyboard = Controller()
+
+        main_win.child_window(title="hours", control_type="Custom").set_focus()
+        keyboard.type(str(hours))
+
+        main_win.child_window(title="minutes", control_type="Custom").set_focus()
+        keyboard.type(str(minutes))
+
+        main_win.child_window(title="seconds", control_type="Custom").set_focus()
+        keyboard.type(str(seconds))
+
+        main_win.child_window(title="Save", control_type="Button").click()
+
+        main_win.child_window(title="Start", control_type="Button").click()
 
 
 def find_email_by_name(recipient_name):

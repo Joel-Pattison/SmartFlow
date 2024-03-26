@@ -26,6 +26,12 @@ class WriteEmailInput(BaseModel):
     body: str = Field(description="The body of the email.")
 
 
+class CreateTimerInput(BaseModel):
+    hours: int = Field(description="The number of hours for the timer.")
+    minutes: int = Field(description="The number of minutes for the timer.")
+    seconds: int = Field(description="The number of seconds for the timer.")
+
+
 class LangchainTools:
     def __init__(self, win, settings_manager):
         automation_functions = AutomationFunctions(win, settings_manager)
@@ -58,4 +64,11 @@ class LangchainTools:
             name="WriteEmail",
             description="Open the default email provider to create a new email.",
             args_schema=WriteEmailInput
+        )
+
+        self.create_timer_tool = StructuredTool.from_function(
+            func=automation_functions.create_timer,
+            name="CreateTimer",
+            description="Create a timer for the specified duration.",
+            args_schema=CreateTimerInput
         )
