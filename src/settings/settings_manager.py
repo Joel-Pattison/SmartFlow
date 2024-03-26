@@ -10,6 +10,7 @@ class SettingsManager:
         "selected_model": None,
         "openai_api_key": None,
         "voice_model": None,
+        "confirm_actions": True,
     }
     save_file = "settings.save"
 
@@ -63,3 +64,10 @@ class SettingsManager:
 
     def get_voice_model(self):
         return self.settings["voice_model"]
+
+    def set_confirm_actions(self, confirm):
+        self.settings["confirm_actions"] = confirm
+        self.update_save()
+
+    def get_confirm_actions(self):
+        return self.settings["confirm_actions"]

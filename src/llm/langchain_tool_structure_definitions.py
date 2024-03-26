@@ -20,9 +20,11 @@ class WindowsSettingsInteractionInput(BaseModel):
 
 
 class LangchainTools:
-    def __init__(self):
+    def __init__(self, win, settings_manager):
+        automation_functions = AutomationFunctions(win, settings_manager)
+
         self.open_app_tool = StructuredTool.from_function(
-            func=AutomationFunctions.open_app,
+            func=automation_functions.open_app,
             name="OpenApp",
             description="Open the specified app, or multiple specified apps. You should always try to provide "
                         "multiple apps to open at the same time as to minimize token usage.",
@@ -30,14 +32,14 @@ class LangchainTools:
         )
 
         self.change_volume_tool = StructuredTool.from_function(
-            func=AutomationFunctions.change_volume,
+            func=automation_functions.change_volume,
             name="ChangeVolume",
             description="Change the system volume to the specified level.",
             args_schema=ChangeVolumeInput
         )
 
         self.windows_settings_interaction_tool = StructuredTool.from_function(
-            func=AutomationFunctions.windows_settings_interaction,
+            func=automation_functions.windows_settings_interaction,
             name="WindowsSettingsInteraction",
             description="Interact with various Windows settings, such as shutdown, restart, sleep, "
                         "dark mode, light mode, night light, Bluetooth, and Wi-Fi.",

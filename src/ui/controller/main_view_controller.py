@@ -1,7 +1,9 @@
 import pyaudio
 from PyQt5.QtCore import QEvent
+
 from src.ui.view.main_view import Ui_Form
 from qframelesswindow import FramelessMainWindow
+from PyQt5.QtCore import pyqtSignal
 
 
 def get_microphone_list():
@@ -20,14 +22,26 @@ def get_microphone_list():
 
 
 class MainWindow(FramelessMainWindow, Ui_Form):
-    def __init__(self, settings_manager, llm_conversation, voice_models):
+    update_voice_text_signal = pyqtSignal(str)
+
+    def __init__(self, settings_manager, voice_models):
         super().__init__()
-        self.llm_conversation = llm_conversation
+        self.llm_conversation = None
         self.settings_manager = settings_manager
         self.voice_models = voice_models
         self.setupUi(self)
+        self.action_execute_btn.clicked.connect(self.on_action_execute_btn_click)
+        self.action_cancel_btn.clicked.connect(self.on_action_cancel_btn_click)
         self.send_loading_ring.hide()
+        self.action_description_lbl.hide()
+        self.action_execute_btn.hide()
+        self.action_cancel_btn.hide()
+        self.action_description_background_lbl.hide()
         self.is_entering_keybind = False
+        self.action_to_execute = None
+        self.has_confirmed_action = False
+
+        self.update_voice_text_signal.connect(self.update_voice_text_label)
 
         self.populate_voice_model_cmb()
         self.load_voice_model_settings()
@@ -58,6 +72,30 @@ class MainWindow(FramelessMainWindow, Ui_Form):
 
     def populate_voice_model_cmb(self):
         self.voice_cmb.addItems(self.voice_models.keys())
+
+    def change_ui_action_confirmer_visual(self, is_open):
+        self.action_description_lbl.setVisible(is_open)
+        self.action_execute_btn.setVisible(is_open)
+        self.action_cancel_btn.setVisible(is_open)
+        self.action_description_background_lbl.setVisible(is_open)
+
+    def display_action_confirmer(self, action_description):
+        self.action_description_lbl.setText(action_description)
+        self.change_ui_action_confirmer_visual(True)
+
+    def bind_action_to_execute(self, action):
+        self.action_to_execute = action
+
+    def on_action_execute_btn_click(self):
+        print("Action confirmed")
+        self.change_ui_action_confirmer_visual(False)
+        self.has_confirmed_action = True
+        self.action_to_execute()
+        self.has_confirmed_action = False
+
+    def on_action_cancel_btn_click(self):
+        self.last_action_confirmer_result = False
+        self.change_ui_action_confirmer_visual(False)
 
     def load_voice_model_settings(self):
         if self.settings_manager.get_voice_model() is None:
@@ -107,6 +145,9 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.command_txt.setText("")
         self.llm_conversation.run_conversation(prompt)
 
+    def set_llm_conversation(self, llm_conversation):
+        self.llm_conversation = llm_conversation
+
     def load_microphone_settings(self):
         if self.settings_manager.get_microphone_name() is None:
             print("No microphone name found in settings: setting to current microphone")
@@ -129,3 +170,6 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         print("Microphone changed: " + self.microphone_cmb.currentText())
         self.settings_manager.set_microphone_name(self.microphone_cmb.currentText())
         self.settings_manager.set_microphone_index(self.microphone_cmb.currentIndex())
+
+    def update_voice_text_label(self, text):
+        self.voice_text_txt.setText(text)

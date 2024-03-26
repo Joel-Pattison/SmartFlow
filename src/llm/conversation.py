@@ -6,13 +6,17 @@ os.environ["OPENAI_API_KEY"] = "sk-Sl0Xy0jV1MLL4VfRH0CVT3BlbkFJHgAGTm5vM7aQEWEFW
 
 
 class LLMConversation:
-    def __init__(self, settings_manager):
+    def __init__(self, settings_manager, win):
         self.settings_manager = settings_manager
-        self.client = LangchainConversation(settings_manager)
+        self.client = LangchainConversation(settings_manager, win)
+        self.win = win
+        win.set_llm_conversation(self)
 
     def run_conversation(self, prompt):
         if os.environ["OPENAI_API_KEY"] != self.settings_manager.get_openai_api_key():
             os.environ["OPENAI_API_KEY"] = self.settings_manager.get_openai_api_key()
+
+        self.win.update_voice_text_signal.emit(prompt)
 
         response = self.client.run_conversation(prompt)
 
