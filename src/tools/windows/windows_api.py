@@ -19,6 +19,7 @@ import win32com.client
 from fuzzywuzzy import process
 from pynput.keyboard import Controller
 from pywinauto.application import Application
+import re
 
 
 def shutdown_computer():
@@ -377,6 +378,31 @@ class AutomationFunctions:
         keyboard.type(am_pm)
 
         main_win.child_window(title="Save", control_type="Button").click()
+
+    def install_application(self, app_name):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.install_application(app_name))
+            self.win.display_action_confirmer(f"Install application {app_name}?")
+            return
+
+        # Search for the app
+        search_command = f"winget search {app_name} --accept-source-agreements"
+        search_result = subprocess.run(search_command, check=True, shell=True, text=True, capture_output=True).stdout
+
+        pattern = fr'^{app_name}\s+([^\s]+)\s+Unknown\s+msstore$'
+
+        # Search for the app ID using the refined regex pattern
+        match = re.search(pattern, search_result, re.MULTILINE | re.IGNORECASE)
+
+        app_id = match.group(1)
+
+        # Install the app
+        install_command = f"winget install --id={app_id} --accept-package-agreements --accept-source-agreements"
+        try:
+            subprocess.run(install_command, check=True, shell=True)
+            print(f"The app '{app_name}' has been successfully installed.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to install the app '{app_name}': {e}")
 
 
 def find_email_by_name(recipient_name):

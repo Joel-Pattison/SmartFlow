@@ -38,6 +38,10 @@ class CreateAlarmInput(BaseModel):
     am_pm: AmPmEnum = Field(description="The AM/PM for the alarm.")
 
 
+class InstallApplicationInput(BaseModel):
+    app_name: str = Field(description="The name of the application to install.")
+
+
 class LangchainTools:
     def __init__(self, win, settings_manager):
         automation_functions = AutomationFunctions(win, settings_manager)
@@ -84,4 +88,11 @@ class LangchainTools:
             name="CreateAlarm",
             description="Create an alarm for the specified time.",
             args_schema=CreateAlarmInput
+        )
+
+        self.install_application_tool = StructuredTool.from_function(
+            func=automation_functions.install_application,
+            name="InstallApplication",
+            description="Install the specified application.",
+            args_schema=InstallApplicationInput
         )
