@@ -14,6 +14,9 @@ from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
 import wmi
+import webbrowser
+import win32com.client
+from fuzzywuzzy import process
 
 
 def shutdown_computer():
@@ -259,6 +262,47 @@ class AutomationFunctions:
                 asyncio.run(toggle_wifi(turn_on))
         except Exception as e:
             print(f"Error performing interaction: {e.with_traceback(None)}")
+
+    def write_email(self, recipient_name, subject, body):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.write_email(recipient_name, subject, body))
+            self.win.display_action_confirmer(f"Write email to {recipient_name} with subject '{subject}' and body '{body}'?")
+            return
+
+        try:
+            # Find the recipient's email address
+            recipient_email = find_email_by_name(recipient_name)
+            if recipient_email:
+                # Construct the mailto URL with the recipient, subject, and body
+                mailto_url = f"mailto:{recipient_email}?subject={subject}&body={body}"
+                # Open the default mail client with the pre-filled details
+                webbrowser.open(mailto_url)
+                print("Opened the default email provider to create a new email.")
+            else:
+                print("Recipient not found in contacts.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+
+def find_email_by_name(recipient_name):
+    # Connect to Outlook
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    # Access the Contacts folder
+    contacts_folder = outlook.GetDefaultFolder(10)  # 10 corresponds to the Contacts folder
+    contacts = contacts_folder.Items
+
+    # Build a list of (full name, email address) tuples
+    contacts_list = [(contact.FullName, contact.Email1Address) for contact in contacts]
+
+    # Use fuzzywuzzy to find the closest match
+    closest_match_name, _ = process.extractOne(recipient_name, [contact[0] for contact in contacts_list])
+
+    # Find the email of the closest match
+    closest_match_email = next((email for name, email in contacts_list if name == closest_match_name), None)
+
+    print(f"Closest match for '{recipient_name}': {closest_match_name} ({closest_match_email})")
+
+    return closest_match_email
 
 
 def find_and_run_app(app_name):

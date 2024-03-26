@@ -16,7 +16,14 @@ class ChangeVolumeInput(BaseModel):
 
 
 class WindowsSettingsInteractionInput(BaseModel):
-    interaction: WindowsSettingsInteractionEnum = Field(description="The interaction to perform with the Windows settings. ")
+    interaction: WindowsSettingsInteractionEnum = Field(
+        description="The interaction to perform with the Windows settings. ")
+
+
+class WriteEmailInput(BaseModel):
+    recipient_name: str = Field(description="The name of the recipient of the email.")
+    subject: str = Field(description="The subject of the email.")
+    body: str = Field(description="The body of the email.")
 
 
 class LangchainTools:
@@ -44,4 +51,11 @@ class LangchainTools:
             description="Interact with various Windows settings, such as shutdown, restart, sleep, "
                         "dark mode, light mode, night light, Bluetooth, and Wi-Fi.",
             args_schema=WindowsSettingsInteractionInput
+        )
+
+        self.write_email_tool = StructuredTool.from_function(
+            func=automation_functions.write_email,
+            name="WriteEmail",
+            description="Open the default email provider to create a new email.",
+            args_schema=WriteEmailInput
         )
