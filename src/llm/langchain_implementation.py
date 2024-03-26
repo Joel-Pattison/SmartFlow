@@ -11,8 +11,8 @@ from src.llm.langchain_tool_structure_definitions import LangchainTools
 # langchain.debug = True
 
 class LangchainConversation:
-    def __init__(self, settings_manager):
-        langchain_tools = LangchainTools()
+    def __init__(self, settings_manager, win):
+        langchain_tools = LangchainTools(win)
         llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 
         prompt = ChatPromptTemplate.from_messages(
