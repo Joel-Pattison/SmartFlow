@@ -9,7 +9,9 @@ from typing import List, Optional
 import os
 import pyautogui
 from pygetwindow import getWindowsWithTitle
-from pycaw.pycaw import AudioUtilities
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from ctypes import POINTER, cast
+from comtypes import CLSCTX_ALL
 from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
 import wmi
 
@@ -193,6 +195,17 @@ class AutomationFunctions:
 
         # Get the default audio device using AudioUtilities
         devices = AudioUtilities.GetSpeakers()
+
+        # Get the interface to the volume control
+        interface = devices.Activate(
+            IAudioEndpointVolume._iid_,
+            CLSCTX_ALL,
+            None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+
+        # Set the master volume to the desired level
+        volume.SetMasterVolumeLevelScalar(volume_level, None)
+        print(f"System volume set to {volume_level}%")
 
     def set_brightness(self, level):
 
