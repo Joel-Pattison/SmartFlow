@@ -7,6 +7,8 @@ from enum import Enum
 from typing import List, Optional
 
 import os
+
+import psutil
 import pyautogui
 from pygetwindow import getWindowsWithTitle
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
@@ -445,6 +447,34 @@ class AutomationFunctions:
             print(f"Website opened successfully: {website_url}")
         except Exception as e:
             print(f"Failed to open the website: {e}")
+
+    def kill_application_process(self, app_name):
+        # Get the list of all running process names
+        process_names = {proc.pid: proc.name() for proc in psutil.process_iter(['name'])}
+
+        # Find the best match for the app_name in the list of process names
+        best_match = process.extractOne(app_name, process_names.values())
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            if best_match:
+                self.win.bind_action_to_execute(lambda: self.kill_application_process(app_name))
+                self.win.display_action_confirmer(f"End the application {best_match}?")
+            return
+
+        if best_match:
+            # Find the PID(s) for the best match name (there might be multiple instances)
+            matched_pids = [pid for pid, name in process_names.items() if name == best_match[0]]
+            print(f"Best match: {best_match[0]} (PID: {', '.join(map(str, matched_pids))})")
+
+            for pid in matched_pids:
+                try:
+                    p = psutil.Process(pid)
+                    p.terminate()  # or p.kill() if terminate is not effective
+                    print(f"Process {pid} ({p.name()}) terminated.")
+                except psutil.NoSuchProcess:
+                    print(f"No process with PID {pid}.")
+        else:
+            print("No matching process found.")
 
 
 def find_email_by_name(recipient_name):

@@ -50,6 +50,10 @@ class OpenWebsiteInput(BaseModel):
     website_url: str = Field(description="The URL of the website to open in the format 'https://www.example.com'.")
 
 
+class KillApplicationProcessInput(BaseModel):
+    app_name: str = Field(description="The name of the application to kill the process of.")
+
+
 class LangchainTools:
     def __init__(self, win, settings_manager):
         automation_functions = AutomationFunctions(win, settings_manager)
@@ -117,4 +121,11 @@ class LangchainTools:
             name="OpenWebsite",
             description="Open the specified website in the default web browser.",
             args_schema=OpenWebsiteInput
+        )
+
+        self.kill_application_process_tool = StructuredTool.from_function(
+            func=automation_functions.kill_application_process,
+            name="KillApplicationProcess",
+            description="Kill the process of the specified application.",
+            args_schema=KillApplicationProcessInput
         )
