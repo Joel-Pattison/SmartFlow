@@ -476,6 +476,22 @@ class AutomationFunctions:
         else:
             print("No matching process found.")
 
+    def change_timezone(self, new_timezone: str):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.change_timezone(new_timezone))
+            self.win.display_action_confirmer(f"Change timezone to {new_timezone}?")
+            return
+
+        try:
+            # Execute the tzutil command to set the new timezone
+            result = subprocess.run(['tzutil', '/s', new_timezone], capture_output=True, text=True, check=True)
+            output = result.stdout if result.stdout else result.stderr
+        except subprocess.CalledProcessError as e:
+            output = f"Failed to change timezone. Error: {e.output}"
+        except Exception as e:
+            output = f"An unexpected error occurred: {e}"
+        return output
+
 
 def find_email_by_name(recipient_name):
     # Connect to Outlook

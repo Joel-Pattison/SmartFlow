@@ -53,6 +53,9 @@ class OpenWebsiteInput(BaseModel):
 class KillApplicationProcessInput(BaseModel):
     app_name: str = Field(description="The name of the application to kill the process of.")
 
+class ChangeTimezoneInput(BaseModel):
+    timezone: str = Field(description="The timezone to change toin the format that Windows uses, e.g. 'Eastern Standard Time' or 'Pacific Standard Time'")
+
 
 class LangchainTools:
     def __init__(self, win, settings_manager):
@@ -128,4 +131,11 @@ class LangchainTools:
             name="KillApplicationProcess",
             description="Kill the process of the specified application.",
             args_schema=KillApplicationProcessInput
+        )
+
+        self.change_timezone_tool = StructuredTool.from_function(
+            func=automation_functions.change_timezone,
+            name="ChangeTimezone",
+            description="Change the timezone of the system.",
+            args_schema=ChangeTimezoneInput
         )
