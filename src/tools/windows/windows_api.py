@@ -7,6 +7,8 @@ from enum import Enum
 from typing import List, Optional
 
 import os
+
+import psutil
 import pyautogui
 from pygetwindow import getWindowsWithTitle
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
@@ -14,6 +16,13 @@ from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from winsdk.windows.devices.radios import Radio, RadioKind, RadioState
 import wmi
+import webbrowser
+import win32com.client
+from fuzzywuzzy import process
+from pynput.keyboard import Controller
+from pywinauto.application import Application
+import re
+import tempfile
 
 
 def shutdown_computer():
@@ -86,6 +95,44 @@ def toggle_night_light(enable_night_mode):
             print(f"Error getting night light state: {e}")
             return False
 
+    def process_night_light_state_data(byte_array, enable_night_mode):
+        night_light_is_on = False
+        ch = byte_array[18]
+        size = len(byte_array)
+        if ch == 0x15:
+            night_light_is_on = True
+        elif ch == 0x13:
+            night_light_is_on = False
+
+        if enable_night_mode and not night_light_is_on:
+            for i in range(10, 15):
+                ch = byte_array[i]
+                if ch != 0xff:
+                    byte_array[i] += 1
+                    break
+            byte_array[18] = 0x15
+            n = 0
+            while n < 2:
+                for j in range(size - 1, 23, -1):
+                    byte_array[j] = byte_array[j - 1]
+                n += 1
+            byte_array[23] = 0x10
+            byte_array[24] = 0x00
+            # extend array
+            byte_array.extend(bytearray(2))
+        elif not enable_night_mode and night_light_is_on:
+            for i in range(10, 15):
+                ch = byte_array[i]
+                if ch != 0xff:
+                    byte_array[i] += 1
+                    break
+            byte_array[18] = 0x13
+            for i in range(24, 22, -1):
+                for j in range(i, size - 2):
+                    byte_array[j] = byte_array[j + 1]
+
+        return night_light_is_on
+
     def write_data_to_registry(byte_array):
         try:
             hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_SET_VALUE)
@@ -99,6 +146,7 @@ def toggle_night_light(enable_night_mode):
     value = get_night_light_state_data()
     if value:
         reg_val = bytearray(value)
+        current_state = process_night_light_state_data(reg_val, enable_night_mode)
         write_data_to_registry(reg_val)
         print("Night Light state changed successfully.")
     else:
@@ -129,6 +177,11 @@ class OpenAppEnum(str, Enum):
     top_right = 'top right'
     bottom_right = 'bottom right'
     invalid = 'invalid'
+
+
+class AmPmEnum(str, Enum):
+    am = 'am'
+    pm = 'pm'
 
 
 # this is a enum with functions as values
@@ -260,6 +313,301 @@ class AutomationFunctions:
         except Exception as e:
             print(f"Error performing interaction: {e.with_traceback(None)}")
 
+    def write_email(self, recipient_name, subject, body):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.write_email(recipient_name, subject, body))
+            self.win.display_action_confirmer(
+                f"Write email to {recipient_name} with subject '{subject}' and body '{body}'?")
+            return
+
+        try:
+            # Find the recipient's email address
+            recipient_email = find_email_by_name(recipient_name)
+            if recipient_email:
+                # Construct the mailto URL with the recipient, subject, and body
+                mailto_url = f"mailto:{recipient_email}?subject={subject}&body={body}"
+                # Open the default mail client with the pre-filled details
+                webbrowser.open(mailto_url)
+                print("Opened the default email provider to create a new email.")
+            else:
+                print("Recipient not found in contacts.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+    def create_timer(self, hours, minutes, seconds):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            time_parts = []
+            if hours > 0:
+                time_parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
+            if minutes > 0:
+                time_parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+            if seconds > 0:
+                time_parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+
+            if len(time_parts) > 1:
+                time_str = ", ".join(time_parts[:-1]) + " and " + time_parts[-1]
+            elif time_parts:
+                time_str = time_parts[0]
+            else:
+                time_str = "0 seconds"
+
+            self.win.bind_action_to_execute(lambda: self.create_timer(hours, minutes, seconds))
+            self.win.display_action_confirmer(f"Create timer for {time_str}?")
+            return
+
+        # Use the PFN of the Windows Alarms & Clock app
+        alarms_app_pfn = "Microsoft.WindowsAlarms_8wekyb3d8bbwe!App"
+
+        # Launch the Alarms & Clock app using its PFN
+        Application().start(f'explorer.exe shell:appsFolder\\{alarms_app_pfn}')
+
+        app = Application(backend="uia").connect(title="Clock", timeout=20)
+
+        main_win = app.window(title="Clock")
+
+        alarm_button = main_win.child_window(title="Timer", auto_id="TimerButton", control_type="ListItem")
+        alarm_button.select()
+
+        main_win.child_window(title="Add new timer", control_type="Button").click()
+
+        keyboard = Controller()
+
+        main_win.child_window(title="hours", control_type="Custom").set_focus()
+        keyboard.type(str(hours))
+
+        main_win.child_window(title="minutes", control_type="Custom").set_focus()
+        keyboard.type(str(minutes))
+
+        main_win.child_window(title="seconds", control_type="Custom").set_focus()
+        keyboard.type(str(seconds))
+
+        main_win.child_window(title="Save", control_type="Button").click()
+
+        main_win.child_window(title="Start", control_type="Button").click()
+
+    def create_alarm(self, hours, minutes, am_pm: AmPmEnum):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            formatted_minutes = f"{minutes:02d}"
+            time_str = f"{hours}:{formatted_minutes} {am_pm}"
+            self.win.bind_action_to_execute(lambda: self.create_alarm(hours, minutes, am_pm))
+            self.win.display_action_confirmer(f"Create alarm for {time_str}?")
+            return
+
+        alarms_app_pfn = "Microsoft.WindowsAlarms_8wekyb3d8bbwe!App"
+
+        Application().start(f'explorer.exe shell:appsFolder\\{alarms_app_pfn}')
+
+        app = Application(backend="uia").connect(title="Clock", timeout=20)
+
+        main_win = app.window(title="Clock")
+
+        alarm_button = main_win.child_window(title="Alarm", auto_id="AlarmButton", control_type="ListItem")
+        alarm_button.select()
+
+        main_win.child_window(title="Add an alarm", control_type="Button").click()
+
+        keyboard = Controller()
+
+        main_win.child_window(auto_id="HourPicker", control_type="Custom").set_focus()
+        keyboard.type(str(hours))
+
+        main_win.child_window(auto_id="MinutePicker", control_type="Custom").set_focus()
+        keyboard.type(str(minutes))
+
+        main_win.child_window(auto_id="TwelveHourPicker", control_type="Custom").set_focus()
+        keyboard.type(am_pm)
+
+        main_win.child_window(title="Save", control_type="Button").click()
+
+    def install_application(self, app_name):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.install_application(app_name))
+            self.win.display_action_confirmer(f"Install application {app_name}?")
+            return
+
+        search_command = f"winget search {app_name} --accept-source-agreements"
+        search_result = subprocess.run(search_command, check=True, shell=True, text=True, capture_output=True).stdout
+
+        pattern = fr'^{app_name}\s+([^\s]+)\s+Unknown\s+msstore$'
+
+        match = re.search(pattern, search_result, re.MULTILINE | re.IGNORECASE)
+
+        app_id = match.group(1)
+
+        install_command = f"winget install --id={app_id} --accept-package-agreements --accept-source-agreements"
+        try:
+            subprocess.run(install_command, check=True, shell=True)
+            print(f"The app '{app_name}' has been successfully installed.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to install the app '{app_name}': {e}")
+
+    def uninstall_application(self, app_name):
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.uninstall_application(app_name))
+            self.win.display_action_confirmer(f"Uninstall application {app_name}?")
+            return
+
+        list_command = "winget list --accept-source-agreements"
+        try:
+            list_result = subprocess.run(list_command, check=True, shell=True, text=True, capture_output=True).stdout
+        except subprocess.CalledProcessError as e:
+            print(f"Error listing installed apps: {e}")
+            return
+
+        print(list_result)
+
+        pattern = fr'{app_name}\s+([^\s]+)\s+'
+        match = re.search(pattern, list_result, re.IGNORECASE)
+
+        if not match:
+            print(f"{app_name} does not appear to be installed.")
+            return
+
+        app_id = match.group(1)
+
+        uninstall_command = f"winget uninstall --id={app_id} --accept-source-agreements"
+        try:
+            subprocess.run(uninstall_command, check=True, shell=True)
+            print(f"The app {app_name} has been successfully uninstalled.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to uninstall {app_name}: {e}")
+
+    def open_website(self, website_url):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.open_website(website_url))
+            self.win.display_action_confirmer(f"Open website {website_url}?")
+            return
+
+        try:
+            webbrowser.open(website_url, new=2)
+            print(f"Website opened successfully: {website_url}")
+        except Exception as e:
+            print(f"Failed to open the website: {e}")
+
+    def kill_application_process(self, app_name):
+        process_names = {proc.pid: proc.name() for proc in psutil.process_iter(['name'])}
+
+        best_match = process.extractOne(app_name, process_names.values())
+
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            if best_match:
+                self.win.bind_action_to_execute(lambda: self.kill_application_process(app_name))
+                self.win.display_action_confirmer(f"End the application {best_match}?")
+            return
+
+        if best_match:
+            matched_pids = [pid for pid, name in process_names.items() if name == best_match[0]]
+            print(f"Best match: {best_match[0]} (PID: {', '.join(map(str, matched_pids))})")
+
+            for pid in matched_pids:
+                try:
+                    p = psutil.Process(pid)
+                    p.terminate()
+                    print(f"Process {pid} ({p.name()}) terminated.")
+                except psutil.NoSuchProcess:
+                    print(f"No process with PID {pid}.")
+        else:
+            print("No matching process found.")
+
+    def change_timezone(self, new_timezone: str):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.change_timezone(new_timezone))
+            self.win.display_action_confirmer(f"Change timezone to {new_timezone}?")
+            return
+
+        try:
+            result = subprocess.run(['tzutil', '/s', new_timezone], capture_output=True, text=True, check=True)
+            output = result.stdout if result.stdout else result.stderr
+        except subprocess.CalledProcessError as e:
+            output = f"Failed to change timezone. Error: {e.output}"
+        except Exception as e:
+            output = f"An unexpected error occurred: {e}"
+        return output
+
+    def change_time_format(self, use_24_hour: bool):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.change_time_format(use_24_hour))
+            self.win.display_action_confirmer(f"Change time format to {'24-hour' if use_24_hour else '12-hour'}?")
+            return
+
+        if use_24_hour:
+            # 24-hour format
+            ps_command = """
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sShortTime -Value "HH:mm";
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sLongTime -Value "HH:mm:ss";
+            """
+        else:
+            # 12-hour format
+            ps_command = """
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sShortTime -Value "hh:mm tt";
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sLongTime -Value "hh:mm:ss tt";
+            """
+
+        try:
+            # Execute the PowerShell command
+            subprocess.run(["powershell", "-Command", ps_command], check=True)
+
+            # Stop Windows Explorer
+            subprocess.run(["taskkill", "/f", "/im", "explorer.exe"], check=True)
+            # Start Windows Explorer again
+            subprocess.Popen(["explorer"])
+
+            print("Time format changed successfully. Explorer was restarted to apply changes immediately.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to change time format or restart Explorer. Error: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+    def create_calendar_event(self, event_title, start_dt, end_dt, description):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(
+                lambda: self.create_calendar_event(event_title, start_dt, end_dt, description))
+            self.win.display_action_confirmer(
+                f"Create calendar event '{event_title}' from {start_dt} to {end_dt}?")
+            return
+
+        event_template = """BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:{title}
+    DTSTART:{start}
+    DTEND:{end}
+    DESCRIPTION:{desc}
+    END:VEVENT
+    END:VCALENDAR
+    """
+        event_ics = event_template.format(
+            title=event_title,
+            start=start_dt,
+            end=end_dt,
+            desc=description
+        )
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ics') as tmpfile:
+            tmpfile_path = tmpfile.name
+            tmpfile.write(event_ics.encode('utf-8'))
+
+        os.startfile(tmpfile_path)
+
+
+def find_email_by_name(recipient_name):
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    contacts_folder = outlook.GetDefaultFolder(10)
+    contacts = contacts_folder.Items
+
+    contacts_list = [(contact.FullName, contact.Email1Address) for contact in contacts]
+
+    closest_match_name, _ = process.extractOne(recipient_name, [contact[0] for contact in contacts_list])
+
+    closest_match_email = next((email for name, email in contacts_list if name == closest_match_name), None)
+
+    print(f"Closest match for '{recipient_name}': {closest_match_name} ({closest_match_email})")
+
+    return closest_match_email
+
 
 def find_and_run_app(app_name):
     paths = [
@@ -280,12 +628,11 @@ def find_and_run_app(app_name):
 
 
 def set_app_location(app_name, location):
-    # location is a enum not a string so must be converted to string
     location = location.value
     window = None
     loops = 0
 
-    while window is None and loops < 4:  # Check the condition here to limit attempts
+    while window is None and loops < 4:
         for win in getWindowsWithTitle(app_name):
             window = win
         if window is None:
