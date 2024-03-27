@@ -68,8 +68,7 @@ class ChangeTimeFormatInput(BaseModel):
 class CraeteCalendarEventInput(BaseModel):
     event_title: str = Field(description="The name of the event to create.")
     start_dt: str = Field(description="The start time of the event in the format 'YYYYMMDDTHHMMSS'")
-    end_dt: str = Field(description="The end time of the event in the format 'YYYYMMDDTHHMMSS' if the end time is not "
-                                    "given, please assume the event is 1 hour long.")
+    end_dt: str = Field(description="The end time of the event in the format 'YYYYMMDDTHHMMSS'")
     description: str = Field(description="The description of the event. leave empty if not needed.")
 
 
@@ -163,10 +162,10 @@ class LangchainTools:
             args_schema=ChangeTimezoneInput
         )
 
-        self.create_calendar_event_tool = StructuredTool.from_function(
-            func=automation_functions.create_calendar_event,
-            name="CreateCalendarEvent",
-            description="Create a calendar event with the specified details. the current date and time is: " + str(
-                datetime.now().strftime("%Y%m%dT%H%M%S")),
-            args_schema=CraeteCalendarEventInput
-        )
+        # self.create_calendar_event_tool = StructuredTool.from_function(
+        #     func=automation_functions.create_calendar_event,
+        #     name="CreateCalendarEvent",
+        #     description="Create a calendar event with the specified details. the current date and time is: " + str(
+        #         datetime.now().strftime("%Y%m%dT%H%M%S")),
+        #     args_schema=CraeteCalendarEventInput
+        # )

@@ -586,12 +586,10 @@ class AutomationFunctions:
             desc=description
         )
 
-        # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.ics') as tmpfile:
             tmpfile_path = tmpfile.name
             tmpfile.write(event_ics.encode('utf-8'))
 
-        # Open the file with the default application
         os.startfile(tmpfile_path)
 
 
