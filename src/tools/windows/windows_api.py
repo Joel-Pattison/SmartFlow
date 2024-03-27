@@ -22,6 +22,7 @@ from fuzzywuzzy import process
 from pynput.keyboard import Controller
 from pywinauto.application import Application
 import re
+import tempfile
 
 
 def shutdown_computer():
@@ -94,6 +95,44 @@ def toggle_night_light(enable_night_mode):
             print(f"Error getting night light state: {e}")
             return False
 
+    def process_night_light_state_data(byte_array, enable_night_mode):
+        night_light_is_on = False
+        ch = byte_array[18]
+        size = len(byte_array)
+        if ch == 0x15:
+            night_light_is_on = True
+        elif ch == 0x13:
+            night_light_is_on = False
+
+        if enable_night_mode and not night_light_is_on:
+            for i in range(10, 15):
+                ch = byte_array[i]
+                if ch != 0xff:
+                    byte_array[i] += 1
+                    break
+            byte_array[18] = 0x15
+            n = 0
+            while n < 2:
+                for j in range(size - 1, 23, -1):
+                    byte_array[j] = byte_array[j - 1]
+                n += 1
+            byte_array[23] = 0x10
+            byte_array[24] = 0x00
+            # extend array
+            byte_array.extend(bytearray(2))
+        elif not enable_night_mode and night_light_is_on:
+            for i in range(10, 15):
+                ch = byte_array[i]
+                if ch != 0xff:
+                    byte_array[i] += 1
+                    break
+            byte_array[18] = 0x13
+            for i in range(24, 22, -1):
+                for j in range(i, size - 2):
+                    byte_array[j] = byte_array[j + 1]
+
+        return night_light_is_on
+
     def write_data_to_registry(byte_array):
         try:
             hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, STATUS_PATH, 0, winreg.KEY_SET_VALUE)
@@ -107,6 +146,7 @@ def toggle_night_light(enable_night_mode):
     value = get_night_light_state_data()
     if value:
         reg_val = bytearray(value)
+        current_state = process_night_light_state_data(reg_val, enable_night_mode)
         write_data_to_registry(reg_val)
         print("Night Light state changed successfully.")
     else:
@@ -428,7 +468,6 @@ class AutomationFunctions:
 
         app_id = match.group(1)
 
-        # Step 3: Uninstall the app
         uninstall_command = f"winget uninstall --id={app_id} --accept-source-agreements"
         try:
             subprocess.run(uninstall_command, check=True, shell=True)
@@ -449,10 +488,8 @@ class AutomationFunctions:
             print(f"Failed to open the website: {e}")
 
     def kill_application_process(self, app_name):
-        # Get the list of all running process names
         process_names = {proc.pid: proc.name() for proc in psutil.process_iter(['name'])}
 
-        # Find the best match for the app_name in the list of process names
         best_match = process.extractOne(app_name, process_names.values())
 
         if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
@@ -462,14 +499,13 @@ class AutomationFunctions:
             return
 
         if best_match:
-            # Find the PID(s) for the best match name (there might be multiple instances)
             matched_pids = [pid for pid, name in process_names.items() if name == best_match[0]]
             print(f"Best match: {best_match[0]} (PID: {', '.join(map(str, matched_pids))})")
 
             for pid in matched_pids:
                 try:
                     p = psutil.Process(pid)
-                    p.terminate()  # or p.kill() if terminate is not effective
+                    p.terminate()
                     print(f"Process {pid} ({p.name()}) terminated.")
                 except psutil.NoSuchProcess:
                     print(f"No process with PID {pid}.")
@@ -483,7 +519,6 @@ class AutomationFunctions:
             return
 
         try:
-            # Execute the tzutil command to set the new timezone
             result = subprocess.run(['tzutil', '/s', new_timezone], capture_output=True, text=True, check=True)
             output = result.stdout if result.stdout else result.stderr
         except subprocess.CalledProcessError as e:
@@ -498,7 +533,6 @@ class AutomationFunctions:
             self.win.display_action_confirmer(f"Change time format to {'24-hour' if use_24_hour else '12-hour'}?")
             return
 
-        # PowerShell command to set the time format
         if use_24_hour:
             # 24-hour format
             ps_command = """
@@ -515,27 +549,61 @@ class AutomationFunctions:
         try:
             # Execute the PowerShell command
             subprocess.run(["powershell", "-Command", ps_command], check=True)
-            print("Time format changed successfully.")
+
+            # Stop Windows Explorer
+            subprocess.run(["taskkill", "/f", "/im", "explorer.exe"], check=True)
+            # Start Windows Explorer again
+            subprocess.Popen(["explorer"])
+
+            print("Time format changed successfully. Explorer was restarted to apply changes immediately.")
         except subprocess.CalledProcessError as e:
-            print(f"Failed to change time format. Error: {e}")
+            print(f"Failed to change time format or restart Explorer. Error: {e}")
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
+    def create_calendar_event(self, event_title, start_dt, end_dt, description):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(
+                lambda: self.create_calendar_event(event_title, start_dt, end_dt, description))
+            self.win.display_action_confirmer(
+                f"Create calendar event '{event_title}' from {start_dt} to {end_dt}?")
+            return
+
+        event_template = """BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:{title}
+    DTSTART:{start}
+    DTEND:{end}
+    DESCRIPTION:{desc}
+    END:VEVENT
+    END:VCALENDAR
+    """
+        event_ics = event_template.format(
+            title=event_title,
+            start=start_dt,
+            end=end_dt,
+            desc=description
+        )
+
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ics') as tmpfile:
+            tmpfile_path = tmpfile.name
+            tmpfile.write(event_ics.encode('utf-8'))
+
+        # Open the file with the default application
+        os.startfile(tmpfile_path)
+
 
 def find_email_by_name(recipient_name):
-    # Connect to Outlook
     outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    # Access the Contacts folder
-    contacts_folder = outlook.GetDefaultFolder(10)  # 10 corresponds to the Contacts folder
+    contacts_folder = outlook.GetDefaultFolder(10)
     contacts = contacts_folder.Items
 
-    # Build a list of (full name, email address) tuples
     contacts_list = [(contact.FullName, contact.Email1Address) for contact in contacts]
 
-    # Use fuzzywuzzy to find the closest match
     closest_match_name, _ = process.extractOne(recipient_name, [contact[0] for contact in contacts_list])
 
-    # Find the email of the closest match
     closest_match_email = next((email for name, email in contacts_list if name == closest_match_name), None)
 
     print(f"Closest match for '{recipient_name}': {closest_match_name} ({closest_match_email})")
@@ -562,12 +630,11 @@ def find_and_run_app(app_name):
 
 
 def set_app_location(app_name, location):
-    # location is a enum not a string so must be converted to string
     location = location.value
     window = None
     loops = 0
 
-    while window is None and loops < 4:  # Check the condition here to limit attempts
+    while window is None and loops < 4:
         for win in getWindowsWithTitle(app_name):
             window = win
         if window is None:

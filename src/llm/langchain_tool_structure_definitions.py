@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from langchain_core.tools import StructuredTool
 from pydantic.v1 import BaseModel, Field
 from typing import List, Optional
@@ -61,6 +63,14 @@ class ChangeTimezoneInput(BaseModel):
 
 class ChangeTimeFormatInput(BaseModel):
     time_format: bool = Field(description="The time format to change to, either 12-hour (false) or 24-hour (true).")
+
+
+class CraeteCalendarEventInput(BaseModel):
+    event_title: str = Field(description="The name of the event to create.")
+    start_dt: str = Field(description="The start time of the event in the format 'YYYYMMDDTHHMMSS'")
+    end_dt: str = Field(description="The end time of the event in the format 'YYYYMMDDTHHMMSS' if the end time is not "
+                                    "given, please assume the event is 1 hour long.")
+    description: str = Field(description="The description of the event. leave empty if not needed.")
 
 
 class LangchainTools:
@@ -151,4 +161,12 @@ class LangchainTools:
             name="ChangeTimeFormat",
             description="Change the time format of the system to 12-hour or 24-hour.",
             args_schema=ChangeTimezoneInput
+        )
+
+        self.create_calendar_event_tool = StructuredTool.from_function(
+            func=automation_functions.create_calendar_event,
+            name="CreateCalendarEvent",
+            description="Create a calendar event with the specified details. the current date and time is: " + str(
+                datetime.now().strftime("%Y%m%dT%H%M%S")),
+            args_schema=CraeteCalendarEventInput
         )
