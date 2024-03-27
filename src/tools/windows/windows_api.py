@@ -492,6 +492,35 @@ class AutomationFunctions:
             output = f"An unexpected error occurred: {e}"
         return output
 
+    def change_time_format(self, use_24_hour: bool):
+        if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
+            self.win.bind_action_to_execute(lambda: self.change_time_format(use_24_hour))
+            self.win.display_action_confirmer(f"Change time format to {'24-hour' if use_24_hour else '12-hour'}?")
+            return
+
+        # PowerShell command to set the time format
+        if use_24_hour:
+            # 24-hour format
+            ps_command = """
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sShortTime -Value "HH:mm";
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sLongTime -Value "HH:mm:ss";
+            """
+        else:
+            # 12-hour format
+            ps_command = """
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sShortTime -Value "hh:mm tt";
+            Set-ItemProperty -Path "HKCU:\\Control Panel\\International" -Name sLongTime -Value "hh:mm:ss tt";
+            """
+
+        try:
+            # Execute the PowerShell command
+            subprocess.run(["powershell", "-Command", ps_command], check=True)
+            print("Time format changed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to change time format. Error: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
 
 def find_email_by_name(recipient_name):
     # Connect to Outlook

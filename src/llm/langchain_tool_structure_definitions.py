@@ -53,8 +53,14 @@ class OpenWebsiteInput(BaseModel):
 class KillApplicationProcessInput(BaseModel):
     app_name: str = Field(description="The name of the application to kill the process of.")
 
+
 class ChangeTimezoneInput(BaseModel):
-    timezone: str = Field(description="The timezone to change toin the format that Windows uses, e.g. 'Eastern Standard Time' or 'Pacific Standard Time'")
+    timezone: str = Field(
+        description="The timezone to change toin the format that Windows uses, e.g. 'Eastern Standard Time' or 'Pacific Standard Time'")
+
+
+class ChangeTimeFormatInput(BaseModel):
+    time_format: bool = Field(description="The time format to change to, either 12-hour (false) or 24-hour (true).")
 
 
 class LangchainTools:
@@ -137,5 +143,12 @@ class LangchainTools:
             func=automation_functions.change_timezone,
             name="ChangeTimezone",
             description="Change the timezone of the system.",
+            args_schema=ChangeTimezoneInput
+        )
+
+        self.change_time_format_tool = StructuredTool.from_function(
+            func=automation_functions.change_time_format,
+            name="ChangeTimeFormat",
+            description="Change the time format of the system to 12-hour or 24-hour.",
             args_schema=ChangeTimezoneInput
         )
