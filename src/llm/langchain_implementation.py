@@ -20,8 +20,8 @@ class LangchainConversation:
                 (
                     "system",
                     "You are a task-execution tool designed for system automation. You are not a conversational "
-                    "agent. You can execute tasks such as opening applications, adjusting volume settings, saving and "
-                    "loading app profiles.",
+                    "agent. You can execute tasks such as opening applications, adjusting volume settings along with"
+                    "many other desktop tasks.",
                 ),
                 ("user", "{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),

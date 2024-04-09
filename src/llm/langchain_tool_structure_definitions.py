@@ -19,7 +19,7 @@ class ChangeVolumeInput(BaseModel):
 
 class WindowsSettingsInteractionInput(BaseModel):
     interaction: WindowsSettingsInteractionEnum = Field(
-        description="The interaction to perform with the Windows settings. ")
+        description="The interaction to perform with the Windows settings.")
 
 
 class WriteEmailInput(BaseModel):
