@@ -60,9 +60,10 @@ class MainWindow(FramelessMainWindow, Ui_Form):
 
         self.send_command_btn.clicked.connect(self.on_send_command_btn_clicked)
 
-        if not self.popupWindow:
-            self.popupWindow = PopupWindow()
-        self.popupWindow.show()
+        if self.settings_manager.get_use_popup_window():
+            if not self.popupWindow:
+                self.popupWindow = PopupWindow()
+            self.popupWindow.show()
 
         if self.settings_manager.get_use_popup_window():
             self.popupWindow.action_execute_btn.clicked.connect(self.on_action_execute_btn_click)

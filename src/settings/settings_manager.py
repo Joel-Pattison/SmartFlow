@@ -11,7 +11,7 @@ class SettingsManager:
         "openai_api_key": None,
         "voice_model": None,
         "confirm_actions": True,
-        "use_popup_window": True
+        "use_popup_window": False
     }
     save_file = "settings.save"
 
