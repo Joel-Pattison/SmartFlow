@@ -2,7 +2,6 @@ from pynput import keyboard
 import threading
 
 
-
 class KeyListener:
     def __init__(self, voice, win, settings_manager):
         self.settings_manager = settings_manager
@@ -56,7 +55,7 @@ class KeyListener:
 
     def stop_recording(self):
         self.win.change_ui_voice_listening_visual(False)
-        self.voice.disable_recording()
+        # self.voice.disable_recording()
         self.is_recording = False
         self.voice.disable_recording()
 
