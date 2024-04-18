@@ -7,73 +7,17 @@
     <x>0</x>
     <y>0</y>
     <width>396</width>
-    <height>712</height>
+    <height>411</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="ComboBox" name="model_cmb">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>50</y>
-     <width>351</width>
-     <height>32</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="ComboBox" name="microphone_cmb">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>190</y>
-     <width>351</width>
-     <height>32</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="CaptionLabel" name="model_lbl">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>30</y>
-     <width>141</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Large Language Model :</string>
-   </property>
-  </widget>
-  <widget class="CaptionLabel" name="microphone_lbl">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>170</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Microphone :</string>
-   </property>
-  </widget>
-  <widget class="LineEdit" name="OpenAi_key_txt">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>260</y>
-     <width>351</width>
-     <height>33</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="LineEdit" name="toggle_voice_txt">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>330</y>
+     <y>45</y>
      <width>311</width>
      <height>33</height>
     </rect>
@@ -83,7 +27,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>490</y>
+     <y>205</y>
      <width>351</width>
      <height>151</height>
     </rect>
@@ -93,7 +37,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>650</y>
+     <y>365</y>
      <width>351</width>
      <height>32</height>
     </rect>
@@ -102,24 +46,11 @@
     <string>Send</string>
    </property>
   </widget>
-  <widget class="CaptionLabel" name="OpenAI_api_lbl">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>240</y>
-     <width>131</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>OpenAI API Key :</string>
-   </property>
-  </widget>
   <widget class="CaptionLabel" name="hotkey_lbl">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>310</y>
+     <y>25</y>
      <width>141</width>
      <height>16</height>
     </rect>
@@ -132,7 +63,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>470</y>
+     <y>185</y>
      <width>121</width>
      <height>16</height>
     </rect>
@@ -148,7 +79,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>335</y>
+     <y>50</y>
      <width>32</width>
      <height>24</height>
     </rect>
@@ -466,33 +397,10 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>150</x>
-     <y>520</y>
+     <y>235</y>
      <width>80</width>
      <height>80</height>
     </rect>
-   </property>
-  </widget>
-  <widget class="ComboBox" name="voice_cmb">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>120</y>
-     <width>351</width>
-     <height>32</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="CaptionLabel" name="voice_lbl">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>100</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Voice Model :</string>
    </property>
   </widget>
   <widget class="TextEdit" name="voice_text_txt">
@@ -502,7 +410,7 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>400</y>
+     <y>115</y>
      <width>351</width>
      <height>51</height>
     </rect>
@@ -512,7 +420,7 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>380</y>
+     <y>95</y>
      <width>121</width>
      <height>16</height>
     </rect>
@@ -525,7 +433,7 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>200</x>
-     <y>500</y>
+     <y>215</y>
      <width>161</width>
      <height>131</height>
     </rect>
@@ -548,7 +456,7 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>240</x>
-     <y>530</y>
+     <y>245</y>
      <width>102</width>
      <height>32</height>
     </rect>
@@ -865,7 +773,7 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>240</x>
-     <y>570</y>
+     <y>285</y>
      <width>102</width>
      <height>32</height>
     </rect>
@@ -1184,7 +1092,7 @@ PillToolButton:disabled:checked {
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>500</y>
+     <y>215</y>
      <width>171</width>
      <height>131</height>
     </rect>
@@ -1245,13 +1153,21 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <set>Qt::NoTextInteraction</set>
    </property>
   </widget>
+  <widget class="QPushButton" name="settings_btn">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>50</y>
+     <width>21</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>⚙</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>ComboBox</class>
-   <extends>QPushButton</extends>
-   <header>qfluentwidgets</header>
-  </customwidget>
   <customwidget>
    <class>PushButton</class>
    <extends>QPushButton</extends>

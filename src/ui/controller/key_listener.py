@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QMetaObject, Qt
 from pynput import keyboard
 import threading
 import time
@@ -47,9 +48,11 @@ class KeyListener:
         if self.win.is_waiting_for_action_confirmation and not self.check_recording_keys() and self.start_holding_time:
             print("Released key after holding for", time.time() - self.start_holding_time)
             if time.time() - self.start_holding_time < 1:
-                self.win.on_action_execute_btn_click()
+                # self.win.on_action_execute_btn_click()
+                self.win.emit_action_confirmed()
             else:
-                self.win.on_action_cancel_btn_click()
+                # self.win.on_action_cancel_btn_click()
+                self.win.emit_action_cancelled()
             self.start_holding_time = None
             return
         elif self.win.is_waiting_for_action_confirmation:

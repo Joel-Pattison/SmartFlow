@@ -428,17 +428,19 @@ class AutomationFunctions:
             self.win.display_action_confirmer(f"Install application {app_name}?")
             return
 
-        search_command = f"winget search {app_name} --accept-source-agreements"
-        search_result = subprocess.run(search_command, check=True, shell=True, text=True, capture_output=True).stdout
-
-        pattern = fr'^{app_name}\s+([^\s]+)\s+Unknown\s+msstore$'
-
-        match = re.search(pattern, search_result, re.MULTILINE | re.IGNORECASE)
-
-        app_id = match.group(1)
-
-        install_command = f"winget install --id={app_id} --accept-package-agreements --accept-source-agreements"
         try:
+            search_command = f"winget search {app_name} --accept-source-agreements"
+            search_result = subprocess.run(search_command, check=True, shell=True, text=True,
+                                           capture_output=True).stdout
+
+            pattern = fr'^{app_name}\s+([^\s]+)\s+Unknown\s+msstore$'
+
+            match = re.search(pattern, search_result, re.MULTILINE | re.IGNORECASE)
+
+            app_id = match.group(1)
+
+            install_command = f"winget install --id={app_id} --accept-package-agreements --accept-source-agreements"
+
             subprocess.run(install_command, check=True, shell=True)
             print(f"The app '{app_name}' has been successfully installed.")
         except subprocess.CalledProcessError as e:
