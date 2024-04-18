@@ -282,7 +282,8 @@ class AutomationFunctions:
 
         if not self.win.has_confirmed_action and self.settings_manager.get_confirm_actions():
             self.win.bind_action_to_execute(lambda: self.windows_settings_interaction(interaction))
-            self.win.display_action_confirmer(f"Perform {interaction} action?")
+            formatted_interaction = interaction.replace("_", " ")
+            self.win.display_action_confirmer(f"Would you like to {formatted_interaction}?")
             return
 
         print("Interaction received:", interaction)

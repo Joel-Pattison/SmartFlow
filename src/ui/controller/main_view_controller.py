@@ -39,6 +39,7 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.is_entering_keybind = False
         self.action_to_execute = None
         self.has_confirmed_action = False
+        self.is_waiting_for_action_confirmation = False
         self.popupWindow = None
 
         self.update_voice_text_signal.connect(self.update_voice_text_label)
@@ -97,6 +98,7 @@ class MainWindow(FramelessMainWindow, Ui_Form):
     def display_action_confirmer(self, action_description):
         self.action_description_lbl.setText(action_description)
         self.change_ui_action_confirmer_visual(True)
+        self.is_waiting_for_action_confirmation = True
 
         # if self.settings_manager.get_use_popup_window():
         #     self.popupWindow.display_action_confirmer(action_description)
@@ -113,10 +115,11 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.has_confirmed_action = True
         self.action_to_execute()
         self.has_confirmed_action = False
+        self.is_waiting_for_action_confirmation = False
 
     def on_action_cancel_btn_click(self):
-        self.last_action_confirmer_result = False
         self.change_ui_action_confirmer_visual(False)
+        self.is_waiting_for_action_confirmation = False
 
     def load_voice_model_settings(self):
         if self.settings_manager.get_voice_model() is None:

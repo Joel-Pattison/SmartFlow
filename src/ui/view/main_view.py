@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\main_view.ui'
+# Form implementation generated from reading ui file 'main_view.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -370,13 +370,6 @@ class Ui_Form(object):
         self.voice_text_lbl = CaptionLabel(Form)
         self.voice_text_lbl.setGeometry(QtCore.QRect(20, 380, 121, 16))
         self.voice_text_lbl.setObjectName("voice_text_lbl")
-        self.action_description_lbl = BodyLabel(Form)
-        self.action_description_lbl.setGeometry(QtCore.QRect(30, 500, 171, 131))
-        self.action_description_lbl.setAutoFillBackground(True)
-        self.action_description_lbl.setStyleSheet("")
-        self.action_description_lbl.setWordWrap(True)
-        self.action_description_lbl.setProperty("darkColor", QtGui.QColor(255, 23, 23))
-        self.action_description_lbl.setObjectName("action_description_lbl")
         self.action_description_background_lbl = BodyLabel(Form)
         self.action_description_background_lbl.setGeometry(QtCore.QRect(200, 500, 161, 131))
         self.action_description_background_lbl.setAutoFillBackground(True)
@@ -992,6 +985,47 @@ class Ui_Form(object):
 "}\n"
 "")
         self.action_cancel_btn.setObjectName("action_cancel_btn")
+        self.action_description_lbl = TextEdit(Form)
+        self.action_description_lbl.setEnabled(True)
+        self.action_description_lbl.setGeometry(QtCore.QRect(30, 500, 171, 131))
+        self.action_description_lbl.setMouseTracking(False)
+        self.action_description_lbl.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.action_description_lbl.setStyleSheet("LineEdit, TextEdit, PlainTextEdit {\n"
+"    color: black;\n"
+"    background-color: rgb(240, 240, 240);\n"
+"    /* font: 14px \"Segoe UI\", \"Microsoft YaHei\"; */\n"
+"    padding: 0px 10px;\n"
+"    selection-background-color: #00a7b3;\n"
+"\n"
+"    border: 0px solid rgba(0, 0, 0, 13);\n"
+"    border-bottom: 0px solid rgba(0, 0, 0, 100);\n"
+"    border-radius: 0px;\n"
+"}\n"
+"\n"
+"TextEdit,\n"
+"PlainTextEdit {\n"
+"    padding: 2px 3px 2px 8px;\n"
+"}\n"
+"\n"
+"LineEdit:focus {\n"
+"}\n"
+"\n"
+"TextEdit:focus,\n"
+"PlainTextEdit:focus {\n"
+"}\n"
+"\n"
+"LineEdit:disabled, TextEdit:disabled,\n"
+"PlainTextEdit:disabled {\n"
+"}\n"
+"\n"
+"#lineEditButton {\n"
+"}\n"
+"\n"
+"#lineEditButton:pressed {\n"
+"}\n"
+"")
+        self.action_description_lbl.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+        self.action_description_lbl.setObjectName("action_description_lbl")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -1007,17 +1041,14 @@ class Ui_Form(object):
         self.CaptionLabel_5.setText(_translate("Form", "Text Command Input :"))
         self.voice_lbl.setText(_translate("Form", "Voice Model :"))
         self.voice_text_lbl.setText(_translate("Form", "Voice Text :"))
-        self.action_description_lbl.setText(_translate("Form", "Message"))
         self.action_execute_btn.setText(_translate("Form", "Execute"))
         self.action_cancel_btn.setText(_translate("Form", "Cancel"))
+        self.action_description_lbl.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:\'Segoe UI\',\'Microsoft YaHei\',\'PingFang SC\'; font-size:14px; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14px;\">Message</span></p></body></html>"))
 from qfluentwidgets import BodyLabel, CaptionLabel, ComboBox, IndeterminateProgressRing, LineEdit, PushButton, RadioButton, TextEdit
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())

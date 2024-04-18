@@ -1,5 +1,6 @@
 from pynput import keyboard
 import threading
+import time
 
 
 class KeyListener:
@@ -13,6 +14,7 @@ class KeyListener:
         self.listener_thread.start()
         self.currently_pressed_keys = set()
         self.is_recording = False
+        self.start_holding_time = None
 
     def start_listening(self):
         self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
@@ -27,6 +29,13 @@ class KeyListener:
 
     def on_press(self, key):
         self.currently_pressed_keys.add(key)
+
+        if self.win.is_waiting_for_action_confirmation and self.check_recording_keys() and not self.start_holding_time:
+            self.start_holding_time = time.time()
+            return
+        elif self.win.is_waiting_for_action_confirmation:
+            return
+
         if self.win.is_entering_keybind:
             self.update_entering_keybind_display()
         elif self.check_recording_keys() and not self.is_recording:
@@ -34,6 +43,18 @@ class KeyListener:
 
     def on_release(self, key):
         self.currently_pressed_keys.discard(key)
+
+        if self.win.is_waiting_for_action_confirmation and not self.check_recording_keys() and self.start_holding_time:
+            print("Released key after holding for", time.time() - self.start_holding_time)
+            if time.time() - self.start_holding_time < 1:
+                self.win.on_action_execute_btn_click()
+            else:
+                self.win.on_action_cancel_btn_click()
+            self.start_holding_time = None
+            return
+        elif self.win.is_waiting_for_action_confirmation:
+            return
+
         if self.win.is_entering_keybind and len(self.currently_pressed_keys) == 0:
             self.set_new_keybind()
         elif self.is_recording and not self.check_recording_keys():
