@@ -1,6 +1,7 @@
 import pyaudio
 from PyQt5.QtCore import QEvent
 
+from src.ui.controller.popup_view_controller import PopupWindow
 from src.ui.view.main_view import Ui_Form
 from qframelesswindow import FramelessMainWindow
 from PyQt5.QtCore import pyqtSignal
@@ -30,8 +31,6 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.settings_manager = settings_manager
         self.voice_models = voice_models
         self.setupUi(self)
-        self.action_execute_btn.clicked.connect(self.on_action_execute_btn_click)
-        self.action_cancel_btn.clicked.connect(self.on_action_cancel_btn_click)
         self.send_loading_ring.hide()
         self.action_description_lbl.hide()
         self.action_execute_btn.hide()
@@ -40,6 +39,7 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.is_entering_keybind = False
         self.action_to_execute = None
         self.has_confirmed_action = False
+        self.popupWindow = None
 
         self.update_voice_text_signal.connect(self.update_voice_text_label)
 
@@ -60,6 +60,17 @@ class MainWindow(FramelessMainWindow, Ui_Form):
 
         self.send_command_btn.clicked.connect(self.on_send_command_btn_clicked)
 
+        if not self.popupWindow:
+            self.popupWindow = PopupWindow()
+        self.popupWindow.show()
+
+        if self.settings_manager.get_use_popup_window():
+            self.popupWindow.action_execute_btn.clicked.connect(self.on_action_execute_btn_click)
+            self.popupWindow.action_cancel_btn.clicked.connect(self.on_action_cancel_btn_click)
+        else:
+            self.action_execute_btn.clicked.connect(self.on_action_execute_btn_click)
+            self.action_cancel_btn.clicked.connect(self.on_action_cancel_btn_click)
+
     def eventFilter(self, watched, event):
         if watched == self.toggle_voice_txt and event.type() == QEvent.FocusIn:
             self.toggle_voice_txt.setText("enter keys...")
@@ -74,14 +85,23 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.voice_cmb.addItems(self.voice_models.keys())
 
     def change_ui_action_confirmer_visual(self, is_open):
-        self.action_description_lbl.setVisible(is_open)
-        self.action_execute_btn.setVisible(is_open)
-        self.action_cancel_btn.setVisible(is_open)
-        self.action_description_background_lbl.setVisible(is_open)
+        if self.settings_manager.get_use_popup_window():
+            self.popupWindow.change_ui_action_confirmer_visual(is_open)
+        else:
+            self.action_description_lbl.setVisible(is_open)
+            self.action_execute_btn.setVisible(is_open)
+            self.action_cancel_btn.setVisible(is_open)
+            self.action_description_background_lbl.setVisible(is_open)
 
     def display_action_confirmer(self, action_description):
         self.action_description_lbl.setText(action_description)
         self.change_ui_action_confirmer_visual(True)
+
+        # if self.settings_manager.get_use_popup_window():
+        #     self.popupWindow.display_action_confirmer(action_description)
+        # else:
+        #     self.action_description_lbl.setText(action_description)
+        #     self.change_ui_action_confirmer_visual(True)
 
     def bind_action_to_execute(self, action):
         self.action_to_execute = action
@@ -127,7 +147,14 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         return self.microphone_cmb.currentIndex()
 
     def change_ui_voice_listening_visual(self, is_listening):
-        self.voice_status_radio.setChecked(is_listening)
+        print("Changing voice listening visual to: " + str(is_listening))
+        if (self.settings_manager.get_use_popup_window()):
+            if is_listening:
+                self.popupWindow.update_visibility(True)
+            else:
+                self.popupWindow.update_visibility(False)
+        else:
+            self.voice_status_radio.setChecked(is_listening)
 
     def load_openai_api_key(self):
         if self.settings_manager.get_openai_api_key() is None:
@@ -172,4 +199,7 @@ class MainWindow(FramelessMainWindow, Ui_Form):
         self.settings_manager.set_microphone_index(self.microphone_cmb.currentIndex())
 
     def update_voice_text_label(self, text):
-        self.voice_text_txt.setText(text)
+        if (self.settings_manager.get_use_popup_window()):
+            self.popupWindow.update_voice_text_label(text)
+        else:
+            self.voice_text_txt.setText(text)
