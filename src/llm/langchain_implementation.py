@@ -1,9 +1,11 @@
+from langchain.globals import set_llm_cache
 from langchain_core.tools import StructuredTool
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents.format_scratchpad.openai_tools import format_to_openai_tool_messages
 from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
 from langchain.agents import AgentExecutor
+from langchain.cache import InMemoryCache
 
 from src.llm.langchain_tool_structure_definitions import LangchainTools
 
@@ -53,6 +55,8 @@ class LangchainConversation:
                 | llm_with_tools
                 | OpenAIToolsAgentOutputParser()
         )
+
+        set_llm_cache(InMemoryCache())
 
         self.agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
