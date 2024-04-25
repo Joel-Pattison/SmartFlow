@@ -2,7 +2,7 @@ import os
 
 from src.llm.langchain_implementation import LangchainConversation
 
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "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"
 
 
 class LLMConversation:

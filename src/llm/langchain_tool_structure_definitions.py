@@ -19,7 +19,7 @@ class ChangeVolumeInput(BaseModel):
 
 class WindowsSettingsInteractionInput(BaseModel):
     interaction: WindowsSettingsInteractionEnum = Field(
-        description="The interaction to perform with the Windows settings. ")
+        description="The interaction to perform with the Windows settings.")
 
 
 class WriteEmailInput(BaseModel):
@@ -76,13 +76,13 @@ class LangchainTools:
     def __init__(self, win, settings_manager):
         automation_functions = AutomationFunctions(win, settings_manager)
 
-        self.open_app_tool = StructuredTool.from_function(
-            func=automation_functions.open_app,
-            name="OpenApp",
-            description="Open the specified app, or multiple specified apps. You should always try to provide "
-                        "multiple apps to open at the same time as to minimize token usage.",
-            args_schema=OpenAppInput
-        )
+        # self.open_app_tool = StructuredTool.from_function(
+        #     func=automation_functions.open_app,
+        #     name="OpenApp",
+        #     description="Open the specified app, or multiple specified apps. You should always try to provide "
+        #                 "multiple apps to open at the same time as to minimize token usage.",
+        #     args_schema=OpenAppInput
+        # )
 
         self.change_volume_tool = StructuredTool.from_function(
             func=automation_functions.change_volume,

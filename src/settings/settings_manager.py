@@ -11,6 +11,7 @@ class SettingsManager:
         "openai_api_key": None,
         "voice_model": None,
         "confirm_actions": True,
+        "use_popup_window": False
     }
     save_file = "settings.save"
 
@@ -71,3 +72,10 @@ class SettingsManager:
 
     def get_confirm_actions(self):
         return self.settings["confirm_actions"]
+
+    def set_use_popup_window(self, use_popup_window):
+        self.settings["use_popup_window"] = use_popup_window
+        self.update_save()
+
+    def get_use_popup_window(self):
+        return self.settings["use_popup_window"]
